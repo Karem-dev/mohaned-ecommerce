@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+@theme {
+  /* Stitch Design Tokens - Mirroring the Provided Image */
+  --color-primary: #ab3600;
+  --color-primary-vibrant: #ff5f1f; /* The vibrant orange in the banner/button */
+  --color-surface: #ffffff;
+  --color-surface-low: #f9f9f9;
+  --color-surface-container: #eeeeee;
+  --color-surface-container-highest: #e2e2e2;
+  
+  --color-on-background: #1a1c1c;
+  --color-secondary: #5f5e5e;
+  --color-error: #ba1a1a;
+  
+  --font-headline: "Epilogue", sans-serif;
+  --font-body: "Manrope", sans-serif;
+
+  --radius-default: 0px; /* Most elements in the image look very sharp or slightly rounded */
+  --radius-button: 4px;
+}
+
+@layer base {
+  body {
+    @apply font-body bg-white text-on-background antialiased;
+  }
+  
+  h1, h2, h3 {
+    @apply font-headline font-black uppercase tracking-tight;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-vibrant text-white px-8 py-4 font-black uppercase tracking-widest text-[10px] transition-all hover:brightness-110 active:scale-95;
+  }
+  
+  .btn-outline {
+    @apply bg-white border border-on-background text-on-background px-8 py-4 font-black uppercase tracking-widest text-[10px] transition-all hover:bg-on-background hover:text-white active:scale-95;
+  }
+
+  .nav-link {
+    @apply text-[10px] font-black uppercase tracking-widest text-on-background transition-all relative;
+  }
+
+  .nav-link.active::after {
+    content: '';
+    @apply absolute -bottom-1 left-0 w-full h-[2px] bg-primary-vibrant;
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #ab3600; }
+
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.editorial-gradient {
+  background: linear-gradient(135deg, #ab3600 0%, #ff5f1f 100%);
+}
+
+@keyframes fade-in-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 3s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.scale-in {
+  animation: scale-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
