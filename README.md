@@ -1,10 +1,10 @@
-# Mohaned E-commerce - Modern Shopping Experience
+# Rose E-commerce - Modern Shopping Experience
 
 A premium, full-stack e-commerce platform built with **React/Vite** and **Laravel (PHP)**.
 
 ## 🚀 Overview
 
-Mohaned E-commerce is a modernized boutique shopping platform focusing on premium aesthetics, seamless navigation, and powerful administrative control.
+Rose E-commerce is a modernized boutique shopping platform focusing on premium aesthetics, seamless navigation, and powerful administrative control.
 
 ### Key Features
 

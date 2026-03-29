@@ -1,29 +1,20 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-    ShoppingBag, Trash2, Plus, Minus, ArrowRight,
-    ShieldCheck, Truck, X, Lock, Tag, ChevronRight
-} from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { getCart, updateCartItem, removeFromCart, applyCoupon, removeCoupon } from '../services/cartService';
 import { getFeaturedProducts } from '../services/productService';
 import ProductCard from '../components/ui/ProductCard';
-
-// ── Bilingual Label ──────────────────────────────────────────────────────────
-const BiLabel = ({ en, ar, className = '' }) => (
-    <div className={`flex items-center justify-between ${className}`}>
-        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">{en}</span>
-        <span className="text-[10px] font-bold text-slate-300" style={{ fontFamily: "'Cairo', sans-serif" }}>{ar}</span>
-    </div>
-);
+import useAuthStore from '../store/authStore';
 
 const CartPage = () => {
+    const { user, checkVerificationBeforeOrder } = useAuthStore();
     const queryClient = useQueryClient();
     const navigate = useNavigate();
     const [couponCode, setCouponCode] = useState('');
+    const [isVerifying, setIsVerifying] = useState(false);
 
-    const { data: cartResp, isLoading } = useQuery({
+    const { data: cart, isLoading } = useQuery({
         queryKey: ['cart'],
         queryFn: getCart,
     });
@@ -32,8 +23,6 @@ const CartPage = () => {
         queryKey: ['featuredProducts'],
         queryFn: getFeaturedProducts,
     });
-
-    const cart = cartResp;
 
     const updateMutation = useMutation({
         mutationFn: ({ itemId, quantity }) => updateCartItem(itemId, quantity),
@@ -44,7 +33,7 @@ const CartPage = () => {
         mutationFn: (id) => removeFromCart(id),
         onSuccess: () => {
             queryClient.invalidateQueries(['cart']);
-            toast.success('تم الحذف · Item removed');
+            toast.success('Removed from collection.');
         },
     });
 
@@ -52,273 +41,265 @@ const CartPage = () => {
         mutationFn: (code) => applyCoupon(code),
         onSuccess: () => {
             queryClient.invalidateQueries(['cart']);
-            toast.success('تم تطبيق الكوبون · Coupon applied');
+            toast.success('Promo protocol applied.');
             setCouponCode('');
         },
-        onError: (err) => toast.error(err.response?.data?.message || 'كوبون غير صالح · Invalid coupon'),
+        onError: (err) => toast.error(err.response?.data?.message || 'Invalid promo code.'),
     });
 
     const removeCouponMutation = useMutation({
         mutationFn: removeCoupon,
         onSuccess: () => {
             queryClient.invalidateQueries(['cart']);
-            toast.success('تم إزالة الكوبون · Coupon removed');
+            toast.success('Promo removed.');
         },
     });
 
-    // ── Loading ──────────────────────────────────────────────────────────────
     if (isLoading) return (
-        <div className="pt-40 min-h-screen flex items-center justify-center">
-            <div className="text-center space-y-4">
-                <div className="w-14 h-14 border-4 border-slate-900 border-t-transparent rounded-full animate-spin mx-auto" />
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-6">
-                    جاري التحميل · Loading Cart...
-                </p>
+        <div className="pt-40 min-h-screen bg-surface px-6 md:px-12">
+            <div className="max-w-7xl mx-auto space-y-8">
+                <div className="h-20 w-64 bg-white/50 rounded-3xl animate-pulse" />
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+                    <div className="lg:col-span-7 space-y-6">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="h-44 bg-white/50 rounded-[2rem] animate-pulse" />
+                        ))}
+                    </div>
+                    <div className="lg:col-span-5 h-[500px] bg-white/50 rounded-[2.5rem] animate-pulse" />
+                </div>
             </div>
         </div>
     );
 
-    // ── Empty State ──────────────────────────────────────────────────────────
     if (!cart || cart.items?.length === 0) return (
-        <div className="pt-40 pb-40 flex flex-col items-center justify-center space-y-10 bg-white">
-            <style>{`@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');`}</style>
-            <div className="w-40 h-40 bg-slate-50 rounded-full flex items-center justify-center border border-slate-100">
-                <ShoppingBag className="w-16 h-16 text-slate-200" />
+        <div className="pt-40 pb-40 flex flex-col items-center justify-center space-y-12 bg-surface">
+            <div className="w-48 h-48 bg-white rounded-full flex items-center justify-center editorial-shadow">
+                <span className="material-symbols-outlined text-6xl text-primary/20" style={{ fontVariationSettings: "'FILL' 1" }}>shopping_bag</span>
             </div>
-            <div className="text-center space-y-4">
-                <h2 className="text-5xl font-black text-slate-950 tracking-tighter uppercase italic">Your cart is empty.</h2>
-                <p className="text-slate-400 text-sm font-bold" style={{ fontFamily: "'Cairo', sans-serif" }}>
-                    لم تقم بإضافة أي منتجات بعد
-                </p>
+            <div className="text-center space-y-6">
+                <h2 className="text-5xl font-extrabold text-on-surface tracking-tighter uppercase italic">Your Cart is Empty.</h2>
+                <p className="text-on-surface-variant text-base italic">The collection awaits your discovery.</p>
                 <Link to="/shop">
-                    <button className="mt-6 bg-slate-950 text-white px-12 py-4 rounded-xl font-black uppercase tracking-widest text-sm hover:-translate-y-0.5 transition-all shadow-xl">
-                        تسوق الآن · Shop Now
+                    <button className="mt-8 px-16 py-5 bg-primary text-white rounded-full font-bold uppercase tracking-[0.2em] text-xs hover:scale-105 transition-all shadow-xl shadow-primary/20">
+                        Explore Shop
                     </button>
                 </Link>
             </div>
         </div>
     );
 
+
     return (
-        <>
-            <style>{`@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');`}</style>
+        <div className="bg-surface pt-20 pb-24 min-h-screen antialiased">
+            <main className="max-w-7xl mx-auto px-6 lg:px-12 pt-16">
+                {/* Welcome Header */}
+                <header className="mb-16">
+                    <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter text-on-surface mb-3 uppercase italic">Your Cart.</h1>
+                    <p className="text-on-surface-variant text-lg italic">Review your editorial selections before transitioning.</p>
+                </header>
 
-            <div className="bg-white pt-28 pb-20 min-h-screen selection:bg-slate-950 selection:text-white">
-                <main className="max-w-7xl mx-auto px-6 lg:px-12">
-
-                    {/* ── Header ──────────────────────────────────────── */}
-                    <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 pb-8 border-b border-slate-100 gap-6">
-                        <div>
-                            <div className="flex items-baseline gap-3">
-                                <h1 className="text-5xl md:text-6xl font-black text-slate-950 tracking-tighter uppercase italic leading-none">
-                                    Shopping Cart
-                                </h1>
-                                <span className="text-3xl font-bold text-slate-300" style={{ fontFamily: "'Cairo', sans-serif" }}>
-                                    · سلة التسوق
-                                </span>
-                            </div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-3 italic">
-                                راجع منتجاتك قبل إتمام الدفع · Review your items before checkout
-                            </p>
-                        </div>
-                        <div className="px-5 py-3 bg-slate-50 rounded-xl border border-slate-100 italic font-black uppercase tracking-widest text-[10px] text-slate-400 shadow-sm">
-                            {cart.items.length} منتج · {cart.items.length} Item{cart.items.length !== 1 ? 's' : ''}
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-                        
-                        {/* ── Left: Items ─────────────────────────────── */}
-                        <div className="lg:col-span-8 space-y-6">
-                            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                                <div className="divide-y divide-slate-100">
-                                    {cart.items.map((item) => (
-                                        <div key={item.id} className="p-6 md:p-8 flex gap-6 md:gap-10 group transition-all">
-                                            {/* Image */}
-                                            <div className="w-24 h-32 md:w-32 md:h-40 bg-slate-50 rounded-xl overflow-hidden shrink-0 border border-slate-100 shadow-inner group-hover:shadow-lg transition-all">
-                                                <img 
-                                                    src={item.product?.image_url} 
-                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                                                    alt={item.product?.name} 
-                                                />
-                                            </div>
-
-                                            {/* Data */}
-                                            <div className="flex-1 flex flex-col justify-between py-1">
-                                                <div className="space-y-2">
-                                                    <div className="flex justify-between items-start gap-4">
-                                                        <Link to={`/products/${item.product?.slug}`}>
-                                                            <h3 className="text-xl md:text-2xl font-black text-slate-950 tracking-tight uppercase italic hover:text-slate-600 transition-colors">
-                                                                {item.product?.name}
-                                                            </h3>
-                                                        </Link>
-                                                        <button 
-                                                            onClick={() => removeMutation.mutate(item.id)}
-                                                            className="text-slate-300 hover:text-rose-500 transition-colors p-2"
-                                                        >
-                                                            <Trash2 className="w-5 h-5" />
-                                                        </button>
-                                                    </div>
-                                                    <div className="flex items-center gap-4 text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">
-                                                        <span>Product Ref: {item.product?.id?.toString().slice(-6)}</span>
-                                                        <span className="w-1 h-1 bg-slate-200 rounded-full" />
-                                                        <span className="text-slate-300">In Stock</span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex flex-col md:flex-row md:items-end justify-between mt-6 gap-6">
-                                                    <div className="flex items-center bg-slate-50 border border-slate-100 rounded-xl overflow-hidden shadow-inner">
-                                                        <button 
-                                                            onClick={() => updateMutation.mutate({ itemId: item.id, quantity: Math.max(1, item.quantity - 1) })}
-                                                            className="px-4 py-3 hover:bg-slate-200 transition-colors"
-                                                        >
-                                                            <Minus className="w-3 h-3" />
-                                                        </button>
-                                                        <span className="px-6 text-sm font-black italic tabular-nums">{item.quantity}</span>
-                                                        <button 
-                                                            onClick={() => updateMutation.mutate({ itemId: item.id, quantity: item.quantity + 1 })}
-                                                            className="px-4 py-3 hover:bg-slate-200 transition-colors"
-                                                        >
-                                                            <Plus className="w-3 h-3" />
-                                                        </button>
-                                                    </div>
-                                                    <div className="flex flex-col items-end">
-                                                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1 italic">Subtotal</span>
-                                                        <span className="text-2xl font-black text-slate-950 italic tabular-nums tracking-tighter shadow-slate-900/10">
-                                                            ${parseFloat(item.total).toFixed(2)}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+                    {/* Left Column: Cart Items (60%) */}
+                    <section className="lg:col-span-7 space-y-8">
+                        {cart.items.map((item) => (
+                            <div key={item.id} className="bg-white p-6 rounded-2xl flex flex-col md:flex-row gap-8 items-center group transition-all editorial-shadow border border-outline-variant/10">
+                                <div className="w-32 h-44 bg-surface-container-high rounded-xl overflow-hidden flex-shrink-0 shadow-inner">
+                                    <img 
+                                        src={item.product?.image_url} 
+                                        alt={item.product?.name} 
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
+                                    />
                                 </div>
-                            </div>
-                        </div>
+                                <div className="flex-grow space-y-4 w-full">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <Link to={`/products/${item.product?.slug}`}>
+                                                <h3 className="text-2xl font-bold text-on-surface hover:text-primary transition-colors tracking-tight">{item.product?.name}</h3>
+                                            </Link>
+                                            {item.variant_label && (
+                                                <p className="text-[10px] font-black text-primary uppercase tracking-widest mt-1 italic">{item.variant_label}</p>
+                                            )}
+                                            <p className="text-xs text-on-surface-variant uppercase tracking-widest font-bold mt-1">Ref: {item.product?.id?.toString().slice(-6)}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-2xl font-bold text-primary italic tracking-tighter">${parseFloat(item.total).toFixed(2)}</span>
+                                            <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mt-1">${parseFloat(item.product?.price).toFixed(2)} / UNIT</p>
+                                        </div>
+                                    </div>
 
-                        {/* ── Right: Summary ──────────────────────────── */}
-                        <aside className="lg:col-span-4 lg:sticky lg:top-28">
-                            <div className="bg-slate-900 rounded-2xl overflow-hidden shadow-2xl relative">
-                                {/* Coupon Section */}
-                                <div className="p-8 border-b border-white/10 bg-black/20">
-                                    <BiLabel en="Promo Code" ar="كود الخصم" className="mb-4" />
-                                    <div className="flex gap-2">
-                                        <div className="relative flex-1">
-                                            <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                                            <input 
-                                                placeholder="MOHANED-20"
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-sm font-bold text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-400 transition-all"
-                                                value={couponCode}
-                                                onChange={e => setCouponCode(e.target.value)}
-                                            />
+                                    <div className="flex items-center justify-between pt-4">
+                                        <div className="flex items-center bg-surface rounded-full p-1 border border-outline-variant/30 min-w-32 justify-between">
+                                            {updateMutation.isPending && updateMutation.variables?.itemId === item.id ? (
+                                                <div className="w-full h-10 flex items-center justify-center">
+                                                    <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <button 
+                                                        onClick={() => updateMutation.mutate({ itemId: item.id, quantity: Math.max(1, item.quantity - 1) })}
+                                                        disabled={updateMutation.isPending || removeMutation.isPending}
+                                                        className="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary transition-all rounded-full hover:bg-white disabled:opacity-30"
+                                                    >
+                                                        <span className="material-symbols-outlined text-sm">remove</span>
+                                                    </button>
+                                                    <span className="px-4 font-bold text-lg tabular-nums text-on-surface italic">{item.quantity}</span>
+                                                    <button 
+                                                        onClick={() => updateMutation.mutate({ itemId: item.id, quantity: item.quantity + 1 })}
+                                                        disabled={updateMutation.isPending || removeMutation.isPending}
+                                                        className="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary transition-all rounded-full hover:bg-white disabled:opacity-30"
+                                                    >
+                                                        <span className="material-symbols-outlined text-sm">add</span>
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                         <button 
-                                            onClick={() => applyMutation.mutate(couponCode)}
-                                            className="px-6 bg-white text-slate-950 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-amber-400 transition-all active:scale-95"
+                                            onClick={() => removeMutation.mutate(item.id)}
+                                            disabled={updateMutation.isPending || (removeMutation.isPending && removeMutation.variables === item.id)}
+                                            className="text-on-surface-variant hover:text-error transition-all p-3 hover:bg-error/5 rounded-full disabled:opacity-30"
                                         >
-                                            تطبيق · Apply
+                                            <span className="material-symbols-outlined">
+                                                {removeMutation.isPending && removeMutation.variables === item.id ? 'sync' : 'delete'}
+                                            </span>
                                         </button>
                                     </div>
                                 </div>
-
-                                {/* Detailed Totals */}
-                                <div className="p-8 space-y-4">
-                                    <div className="flex items-baseline gap-3 mb-6">
-                                        <h3 className="text-xl font-black tracking-tighter italic uppercase text-white leading-none">Order Summary</h3>
-                                        <span className="text-slate-500 font-bold" style={{ fontFamily: "'Cairo', sans-serif" }}>· ملخص الطلب</span>
-                                    </div>
-
-                                    {[
-                                        { en: 'Subtotal', ar: 'المجموع الفردي', val: cart.totals?.subtotal },
-                                        ...(cart.totals?.discount > 0 ? [{ en: 'Applied Discount', ar: 'الخصم المطبق', val: -cart.totals?.discount, isDiscount: true }] : []),
-                                        { en: 'Express Shipping', ar: 'شحن سريع', val: cart.totals?.shipping },
-                                        { en: 'Est. Regulatory Tax', ar: 'الضريبة التقديرية', val: cart.totals?.tax }
-                                    ].map((row) => (
-                                        <div key={row.en} className="flex justify-between items-center group">
-                                            <div className="flex flex-col">
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 italic leading-none">{row.en}</span>
-                                                <span className="text-[10px] font-bold text-slate-600 mt-1" style={{ fontFamily: "'Cairo', sans-serif" }}>{row.ar}</span>
-                                            </div>
-                                            <span className={`text-base font-black italic tabular-nums tracking-tighter shadow-inner ${row.isDiscount ? 'text-emerald-400' : 'text-slate-300'}`}>
-                                                {row.val < 0 ? '-' : ''}${Math.abs(parseFloat(row.val || 0)).toFixed(2)}
-                                            </span>
-                                        </div>
-                                    ))}
-
-                                    {/* Final Total */}
-                                    <div className="pt-8 mt-8 border-t border-white/10 flex justify-between items-end">
-                                        <div className="space-y-1">
-                                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Total Commitment</p>
-                                            <p className="text-3xl font-black uppercase italic text-white tracking-widest">Total</p>
-                                            <p className="text-slate-500 font-bold text-sm" style={{ fontFamily: "'Cairo', sans-serif" }}>الإجمالي النهائي</p>
-                                        </div>
-                                        <span className="text-5xl font-black text-amber-400 italic tracking-tighter leading-none tabular-nums animate-pulse">
-                                            ${parseFloat(cart.totals?.total || 0).toFixed(2)}
-                                        </span>
-                                    </div>
-
-                                    {/* Checkout Interaction */}
-                                    <button 
-                                        onClick={() => navigate('/checkout')}
-                                        className="w-full mt-10 py-5 bg-white text-slate-950 text-sm font-black uppercase tracking-[0.2em] italic rounded-xl hover:bg-amber-400 transition-all shadow-3xl flex items-center justify-center gap-4 group/btn active:scale-95"
-                                    >
-                                        إتمام الشراء · Checkout <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-2 transition-transform" />
-                                    </button>
-
-                                    {/* Minimalist Trust */}
-                                    <div className="flex items-center justify-center gap-6 pt-10 opacity-30">
-                                        {[
-                                            { Icon: ShieldCheck, label: 'آمن · Secure' },
-                                            { Icon: Lock, label: 'مشفر · SSL' },
-                                            { Icon: Truck, label: 'شحن · Shipping' },
-                                        ].map(({ Icon, label }) => (
-                                            <div key={label} className="flex flex-col items-center gap-1">
-                                                <Icon className="w-5 h-5 text-slate-500" />
-                                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">{label}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
                             </div>
-                        </aside>
-                    </div>
+                        ))}
 
-                    {/* ── You May Also Like ─────────────────────────── */}
-                    <section className="mt-24 pt-16 border-t border-slate-100">
-                        <div className="flex items-end justify-between mb-10">
-                            <div>
-                                <h2 className="text-4xl font-black uppercase tracking-tighter italic text-slate-950 leading-none">
-                                    You May Also Like
-                                    <span className="text-2xl font-bold text-slate-300 ml-4 italic" style={{ fontFamily: "'Cairo', sans-serif" }}>
-                                        · قد يعجبك أيضاً
-                                    </span>
-                                </h2>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-3 italic">
-                                    Curated selections just for you · اختيارات مخصصة لك
-                                </p>
+                        {/* Promo Code */}
+                        <div className="pt-12">
+                            <div className="flex gap-4">
+                                <input 
+                                    className="flex-grow bg-white border border-outline-variant/30 rounded-full px-8 py-4 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none font-body text-on-surface" 
+                                    placeholder="Enter Promo Code" 
+                                    type="text" 
+                                    value={couponCode}
+                                    onChange={e => setCouponCode(e.target.value)}
+                                />
+                                <button 
+                                    onClick={() => applyMutation.mutate(couponCode)}
+                                    className="px-10 py-4 rounded-full bg-secondary-container text-on-secondary-container font-bold uppercase tracking-widest text-xs hover:opacity-90 transition-opacity whitespace-nowrap"
+                                >
+                                    Apply
+                                </button>
                             </div>
-                            <Link
-                                to="/shop"
-                                className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 border-b border-slate-300 hover:border-slate-900 pb-0.5 transition-all"
-                            >
-                                عرض الكل · View All
-                            </Link>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                            {featuredProducts?.slice(0, 4).map((p) => (
-                                <ProductCard key={p.id} product={p} />
-                            ))}
-                            {!featuredProducts && (
-                                <div className="col-span-full py-12 text-center text-slate-400 font-bold uppercase tracking-widest text-[10px]">
-                                    جاري تحميل المنتجات المقترحة · Loading Suggestions...
-                                </div>
+                            {cart.totals?.discount > 0 && (
+                                <button 
+                                    onClick={() => removeCouponMutation.mutate()}
+                                    className="mt-4 text-[10px] font-bold text-error uppercase tracking-widest ml-8 hover:underline"
+                                >
+                                    Remove Applied Discount
+                                </button>
                             )}
                         </div>
                     </section>
-                </main>
-            </div>
-        </>
+
+                    {/* Right Column: Order Summary (40%) */}
+                    <aside className="lg:col-span-5 bg-white p-10 rounded-[2.5rem] editorial-shadow border border-outline-variant/10 sticky top-32">
+                        <h2 className="text-3xl font-extrabold mb-10 tracking-tighter uppercase italic text-on-surface">Order Summary</h2>
+                        
+                        <div className="space-y-5 mb-10">
+                            <div className="flex justify-between items-center group">
+                                <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Subtotal</span>
+                                <span className="text-xl font-bold text-on-surface tabular-nums">${parseFloat(cart.totals?.subtotal).toFixed(2)}</span>
+                            </div>
+                            {cart.totals?.discount > 0 && (
+                                <div className="flex justify-between items-center group">
+                                    <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-600">Applied Discount</span>
+                                    <span className="text-xl font-bold text-emerald-600 tabular-nums">-${parseFloat(cart.totals?.discount).toFixed(2)}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-between items-center group">
+                                <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Shipping</span>
+                                <span className="text-xl font-bold text-primary uppercase italic tracking-tighter">{parseFloat(cart.totals?.shipping) === 0 ? 'FREE' : `$${parseFloat(cart.totals?.shipping).toFixed(2)}`}</span>
+                            </div>
+                            <div className="flex justify-between items-center group">
+                                <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Estimated Tax</span>
+                                <span className="text-xl font-bold text-on-surface tabular-nums">${parseFloat(cart.totals?.tax).toFixed(2)}</span>
+                            </div>
+                        </div>
+
+                        <div className="h-px bg-outline-variant/20 mb-8"></div>
+                        
+                        <div className="flex justify-between items-end mb-12">
+                            <div>
+                                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-on-surface-variant">Total Commitment</span>
+                                <p className="text-2xl font-extrabold text-on-surface uppercase italic">Total</p>
+                            </div>
+                            <span className="text-5xl font-extrabold text-primary italic tracking-tighter tabular-nums">${parseFloat(cart.totals?.total).toFixed(2)}</span>
+                        </div>
+
+                        <button 
+                            onClick={async () => {
+                                if (!user) {
+                                    toast.error('Identity validation required. Please login.');
+                                    navigate('/login');
+                                    return;
+                                }
+                                
+                                setIsVerifying(true);
+                                try {
+                                    const isVerified = await checkVerificationBeforeOrder();
+                                    if (isVerified) {
+                                        navigate('/checkout');
+                                    }
+                                } finally {
+                                    setIsVerifying(false);
+                                }
+                            }}
+                            disabled={isVerifying}
+                            className="w-full bg-primary text-white py-6 rounded-full text-sm font-bold uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all mb-8 flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
+                        >
+                            {isVerifying ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    Validating...
+                                </>
+                            ) : (
+                                <>
+                                    Proceed to Checkout
+                                    <span className="material-symbols-outlined">arrow_forward</span>
+                                </>
+                            )}
+                        </button>
+
+                        <div className="space-y-6">
+                            <p className="text-center text-[10px] uppercase tracking-[0.3em] text-on-surface-variant font-bold">Express Curation</p>
+                            <div className="grid grid-cols-2 gap-4">
+                                <button className="bg-surface py-4 rounded-full flex justify-center items-center hover:bg-surface-variant transition-colors border border-outline-variant/10 group">
+                                    <span className="font-bold text-[11px] uppercase tracking-widest text-on-surface-variant group-hover:text-on-surface">Apple Pay</span>
+                                </button>
+                                <button className="bg-[#ffc439] text-[#003087] py-4 rounded-full flex justify-center items-center hover:opacity-90 transition-opacity">
+                                    <span className="font-bold text-[11px] uppercase tracking-widest">PayPal</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="mt-12 flex items-center gap-3 justify-center text-on-surface-variant pt-8 border-t border-outline-variant/10">
+                            <span className="material-symbols-outlined text-base">lock</span>
+                            <span className="text-[10px] font-bold uppercase tracking-widest">Secure SSL Encrypted Checkout</span>
+                        </div>
+                    </aside>
+                </div>
+
+                {/* You Might Also Like Section */}
+                <section className="mt-32 pt-20 border-t border-outline-variant/10">
+                    <div className="flex items-end justify-between mb-12">
+                        <div>
+                            <h2 className="text-4xl font-extrabold tracking-tighter uppercase italic text-on-surface leading-none">The Curator's Choice.</h2>
+                            <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.3em] mt-4">Selected just for you</p>
+                        </div>
+                        <Link to="/shop" className="text-[11px] font-bold uppercase tracking-widest text-primary hover:underline underline-offset-8 transition-all px-4">View Collection</Link>
+                    </div>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+                        {featuredProducts?.slice(0, 4).map((p) => (
+                            <ProductCard key={p.id} product={p} />
+                        ))}
+                    </div>
+                </section>
+            </main>
+        </div>
     );
 };
 

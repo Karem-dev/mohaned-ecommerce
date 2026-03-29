@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
-import { 
-  ChevronRight, 
-  ChevronDown, 
-  Search,
-  ArrowRight
-} from 'lucide-react';
 import { getCategoryBySlug } from '../services/categoryService';
 import ProductCard from '../components/ui/ProductCard';
 
@@ -19,6 +13,11 @@ const CategoryPage = () => {
     const minPrice = searchParams.get('min_price') || '';
     const maxPrice = searchParams.get('max_price') || '';
     const stockStatus = searchParams.get('stock_status') || '';
+
+    // Active filter tracking
+    const activeFilters = [];
+    if (minPrice || maxPrice) activeFilters.push({ key: 'price', label: `Price: $${minPrice || '0'}-$${maxPrice || '∞'}` });
+    if (stockStatus) activeFilters.push({ key: 'stock', label: stockStatus === 'in_stock' ? 'In Stock' : stockStatus });
 
     const { data: categoryData, isLoading } = useQuery({
         queryKey: ['category', slug, sort, minPrice, maxPrice, stockStatus],
@@ -41,130 +40,224 @@ const CategoryPage = () => {
         setSearchParams(newParams);
     };
 
-    const resetFilters = () => {
-        setSearchParams({ sort_by: 'newest' });
+    const clearFilter = (key) => {
+        const newParams = new URLSearchParams(searchParams);
+        if (key === 'price') {
+            newParams.delete('min_price');
+            newParams.delete('max_price');
+        } else if (key === 'stock') {
+            newParams.delete('stock_status');
+        }
+        setSearchParams(newParams);
+    };
+
+    const clearAllFilters = () => {
+        setSearchParams({});
+    };
+
+    // Sort label mapping
+    const sortLabels = {
+        'newest': 'Newest',
+        'price_asc': 'Price: Low to High',
+        'price_desc': 'Price: High to Low',
+        'oldest': 'Oldest First',
     };
 
     if (isLoading) {
         return (
-            <div className="pt-40 pb-40 text-center">
-                <div className="inline-block w-12 h-12 border-4 border-slate-950 border-t-transparent rounded-full animate-spin"></div>
-                <p className="mt-8 font-bold text-slate-400">Loading collection...</p>
+            <div className="pt-40 pb-40 text-center bg-surface min-h-screen">
+                <div className="inline-block w-8 h-8 border-[3px] border-primary border-t-transparent rounded-full animate-spin"></div>
+                <p className="mt-8 font-semibold text-on-surface-variant uppercase tracking-widest text-xs">Loading Collection...</p>
             </div>
         );
     }
 
     if (!category) return (
-        <div className="pt-60 pb-60 text-center space-y-8">
-            <h1 className="text-4xl font-black text-slate-900 uppercase italic">Collection Not Found</h1>
-            <Link to="/shop" className="inline-block px-12 py-5 bg-slate-950 text-white font-black uppercase text-[11px] tracking-widest rounded-xl shadow-xl">Return to Shop</Link>
+        <div className="pt-60 pb-60 text-center space-y-8 bg-surface min-h-screen">
+            <div className="w-24 h-24 bg-surface-container-high rounded-full flex items-center justify-center mx-auto">
+                <span className="material-symbols-outlined text-4xl text-on-surface-variant">search_off</span>
+            </div>
+            <h1 className="text-2xl font-bold text-on-surface font-headline">Category Not Found</h1>
+            <p className="text-on-surface-variant max-w-md mx-auto">The category you're looking for doesn't exist or has been removed.</p>
+            <Link to="/shop" className="inline-block px-10 py-4 bg-primary text-white rounded-full font-bold shadow-lg shadow-primary/25 active:scale-95 transition-transform">
+                Browse All Products
+            </Link>
         </div>
     );
 
     return (
-        <div className="bg-white min-h-screen font-manrope">
-            
-            {/* Header / Hero Section */}
-            <header className="relative pt-32 pb-24 border-b border-slate-100">
-                <div className="max-w-7xl mx-auto px-6 lg:px-12">
-                    <nav className="flex mb-10 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                        <Link to="/" className="hover:text-slate-900 transition-colors">Home</Link>
-                        <span className="mx-3 text-slate-200">/</span>
-                        <Link to="/shop" className="hover:text-slate-900 transition-colors">Catalog</Link>
-                        <span className="mx-3 text-slate-200">/</span>
-                        <span className="text-slate-900">{category.name}</span>
-                    </nav>
+        <div className="bg-surface min-h-screen font-body antialiased">
 
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-12">
-                        <div className="flex-1 max-w-3xl space-y-6">
-                            <h1 className="text-6xl md:text-8xl font-black text-slate-900 tracking-tighter leading-none uppercase italic">
-                                {category.name}
-                            </h1>
-                            <p className="text-slate-500 text-lg font-medium leading-relaxed">
-                                {category.description || `Explore our curated selection of high-quality products within the ${category.name} category.`}
-                            </p>
-                        </div>
-                        <div className="hidden md:flex flex-col items-end border-l border-slate-100 pl-10">
-                            <span className="text-slate-900 font-black text-6xl leading-none italic">{totalCount}</span>
-                            <span className="text-slate-300 text-[10px] font-bold uppercase tracking-widest mt-3">Available Products</span>
-                        </div>
+            {/* Breadcrumb */}
+            <nav className="px-6 py-4 max-w-7xl mx-auto">
+                <div className="flex items-center gap-2 text-xs font-medium tracking-wide text-on-surface-variant uppercase">
+                    <Link to="/" className="hover:text-primary transition-colors">Home</Link>
+                    <span className="material-symbols-outlined text-[12px]">chevron_right</span>
+                    <Link to="/categories" className="hover:text-primary transition-colors">Categories</Link>
+                    <span className="material-symbols-outlined text-[12px]">chevron_right</span>
+                    <span className="text-primary">{category.name}</span>
+                </div>
+            </nav>
+
+            {/* Editorial Hero Banner */}
+            <section className="px-6 mb-12 max-w-7xl mx-auto">
+                <div className="relative h-[350px] md:h-[450px] w-full rounded-lg overflow-hidden flex items-center shadow-lg">
+                    {category.image_url ? (
+                        <img
+                            className="absolute inset-0 w-full h-full object-cover"
+                            src={category.image_url}
+                            alt={category.name}
+                        />
+                    ) : (
+                        <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-primary/80 via-primary/60 to-secondary/40" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-r from-on-background/60 via-on-background/20 to-transparent"></div>
+                    <div className="relative z-10 px-8 md:px-12 max-w-2xl">
+                        <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tight font-headline">
+                            {category.name}
+                        </h1>
+                        <p className="text-base md:text-lg text-white/90 font-light leading-relaxed max-w-lg">
+                            {category.description || `Discover our exclusive collection of hand-picked items from the ${category.name} category. Quality and elegance in every piece.`}
+                        </p>
                     </div>
                 </div>
-            </header>
+            </section>
 
-            <main className="max-w-7xl mx-auto px-6 lg:px-12 py-16">
-                
-                {/* Subcategory Navigation & Simple Controls */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-16">
-                    {category.children?.length > 0 ? (
-                        <div className="flex items-center gap-3 overflow-x-auto pb-2 no-scrollbar">
-                            <Link to={`/category/${category.slug}`} className="whitespace-nowrap px-6 py-3 bg-slate-950 text-white text-[10px] font-black tracking-[0.2em] uppercase rounded-full shadow-lg">ALL</Link>
-                            {category.children.map((child) => (
-                                <Link 
-                                    key={child.id}
-                                    to={`/category/${child.slug}`}
-                                    className="whitespace-nowrap px-6 py-3 bg-slate-50 text-slate-500 text-[10px] font-bold tracking-[0.1em] uppercase rounded-full hover:bg-slate-100 hover:text-slate-900 transition-all border border-slate-100"
-                                >
-                                    {child.name}
-                                </Link>
-                            ))}
-                        </div>
-                    ) : (
-                        <div></div>
-                    )}
-
-                    <div className="flex items-center gap-8 self-end md:self-auto">
-                        <div className="flex items-center gap-4">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">Sort</span>
-                            <select 
-                                value={sort}
-                                onChange={(e) => updateFilter('sort_by', e.target.value)}
-                                className="bg-transparent text-[11px] font-black uppercase tracking-wider text-slate-950 border-none outline-none appearance-none cursor-pointer border-b-2 border-slate-100 pb-1 focus:border-slate-950 transition-colors"
+            {/* Subcategory Pills */}
+            {category.children?.length > 0 && (
+                <section className="px-6 mb-10 max-w-7xl mx-auto overflow-hidden">
+                    <div className="flex items-center gap-3 overflow-x-auto hide-scrollbar pb-2">
+                        <Link
+                            to={`/category/${category.slug}`}
+                            className="px-8 py-3 bg-primary text-white rounded-full text-sm font-semibold whitespace-nowrap active:scale-95 transition-all shadow-md shadow-primary/20"
+                        >
+                            All Collections
+                        </Link>
+                        {category.children.map((child) => (
+                            <Link
+                                key={child.id}
+                                to={`/category/${child.slug}`}
+                                className="px-8 py-3 bg-surface-container-low text-on-surface-variant hover:bg-secondary-fixed hover:text-on-secondary-fixed rounded-full text-sm font-semibold whitespace-nowrap active:scale-95 transition-all"
                             >
-                                <option value="newest">Newest</option>
-                                <option value="price_asc">Price: Low - High</option>
-                                <option value="price_desc">Price: High - Low</option>
-                            </select>
+                                {child.name}
+                            </Link>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* Filter & Sort Bar */}
+            <section className="px-6 mb-8 max-w-7xl mx-auto">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-surface-container-lowest rounded-xl shadow-sm">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mr-2">
+                            {totalCount} {totalCount === 1 ? 'Product' : 'Products'}
+                        </span>
+                        {activeFilters.length > 0 && (
+                            <>
+                                <div className="w-px h-4 bg-outline-variant mx-2" />
+                                {activeFilters.map((filter) => (
+                                    <div key={filter.key} className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary-fixed text-on-secondary-fixed-variant rounded-full text-xs font-medium">
+                                        {filter.label}
+                                        <button onClick={() => clearFilter(filter.key)} className="hover:text-primary transition-colors">
+                                            <span className="material-symbols-outlined text-[14px]">close</span>
+                                        </button>
+                                    </div>
+                                ))}
+                                <button onClick={clearAllFilters} className="text-xs text-primary font-bold hover:underline ml-2">
+                                    Clear All
+                                </button>
+                            </>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <div className="relative inline-block text-left">
+                            <div className="flex items-center gap-2 px-4 py-2 bg-surface-container-low rounded-full text-sm font-medium text-on-surface">
+                                <span className="text-xs text-on-surface-variant mr-1">Sort by:</span>
+                                <select
+                                    value={sort}
+                                    onChange={(e) => updateFilter('sort_by', e.target.value)}
+                                    className="bg-transparent border-none outline-none text-sm font-semibold text-on-surface cursor-pointer appearance-none pr-6"
+                                >
+                                    <option value="newest">Newest</option>
+                                    <option value="price_asc">Price: Low to High</option>
+                                    <option value="price_desc">Price: High to Low</option>
+                                    <option value="oldest">Oldest First</option>
+                                </select>
+                                <span className="material-symbols-outlined text-sm pointer-events-none -ml-4">expand_more</span>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </section>
 
-                {/* Product Grid - Full Width */}
-                <div className="min-h-[400px]">
-                    {products.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-16">
-                            {products.map((product) => (
-                                <ProductCard key={product.id} product={product} />
+            {/* Product Grid */}
+            <section className="px-6 max-w-7xl mx-auto">
+                {products.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {products.map((product) => (
+                            <ProductCard key={product.id} product={product} />
+                        ))}
+                    </div>
+                ) : (
+                    /* Empty State */
+                    <div className="py-24 flex flex-col items-center justify-center text-center">
+                        <div className="w-24 h-24 bg-surface-container-high rounded-full flex items-center justify-center mb-6">
+                            <span className="material-symbols-outlined text-4xl text-on-surface-variant">search_off</span>
+                        </div>
+                        <h2 className="text-2xl font-bold text-on-surface mb-2 font-headline">No products found</h2>
+                        <p className="text-on-surface-variant mb-8 max-w-md">
+                            We couldn't find any products matching your current filters. Try adjusting your search or explore our other collections.
+                        </p>
+                        <button
+                            onClick={clearAllFilters}
+                            className="px-10 py-4 bg-primary text-white rounded-full font-bold shadow-lg shadow-primary/25 active:scale-95 transition-transform"
+                        >
+                            Browse All Products
+                        </button>
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {products.length > 0 && categoryData?.products?.last_page > 1 && (
+                    <div className="mt-16 pt-8 border-t border-outline-variant/20 flex justify-center">
+                        <div className="flex items-center gap-2">
+                            {categoryData?.products?.current_page > 1 && (
+                                <button
+                                    onClick={() => updateFilter('page', String(categoryData.products.current_page - 1))}
+                                    className="w-10 h-10 rounded-full bg-surface-container-low text-on-surface-variant flex items-center justify-center hover:bg-secondary-fixed transition-all active:scale-95"
+                                >
+                                    <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                                </button>
+                            )}
+                            {Array.from({ length: Math.min(categoryData?.products?.last_page || 1, 5) }, (_, i) => i + 1).map(page => (
+                                <button
+                                    key={page}
+                                    onClick={() => updateFilter('page', String(page))}
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all active:scale-95 ${
+                                        page === (categoryData?.products?.current_page || 1)
+                                            ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                            : 'bg-surface-container-low text-on-surface-variant hover:bg-secondary-fixed'
+                                    }`}
+                                >
+                                    {page}
+                                </button>
                             ))}
+                            {(categoryData?.products?.current_page || 1) < (categoryData?.products?.last_page || 1) && (
+                                <button
+                                    onClick={() => updateFilter('page', String((categoryData?.products?.current_page || 1) + 1))}
+                                    className="w-10 h-10 rounded-full bg-surface-container-low text-on-surface-variant flex items-center justify-center hover:bg-secondary-fixed transition-all active:scale-95"
+                                >
+                                    <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                                </button>
+                            )}
                         </div>
-                    ) : (
-                        <div className="py-40 text-center space-y-8">
-                            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto opacity-50">
-                                <Search className="w-8 h-8 text-slate-300" />
-                            </div>
-                            <div className="max-w-sm mx-auto">
-                                <h2 className="text-3xl font-black text-slate-950 uppercase italic tracking-tighter">Empty Collection</h2>
-                                <p className="text-slate-400 mt-4 font-medium text-sm leading-relaxed">
-                                    There are currently no items available in this category. Please check back later or explore other collections.
-                                </p>
-                            </div>
-                            <Link to="/shop" className="inline-block px-12 py-5 bg-slate-950 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-xl shadow-2xl hover:scale-105 active:scale-95 transition-all">
-                                Explore Catalog
-                            </Link>
-                        </div>
-                    )}
+                    </div>
+                )}
+            </section>
 
-                    {/* Pagination */}
-                    {products.length > 0 && categoryData?.products?.last_page > 1 && (
-                        <div className="mt-32 pt-16 border-t border-slate-50 flex flex-col items-center">
-                            <button className="group flex items-center gap-4 px-16 py-6 border-2 border-slate-950 font-black text-[11px] uppercase tracking-[0.3em] hover:bg-slate-950 hover:text-white transition-all shadow-xl">
-                                <span>NEXT COLLECTION PAGE</span>
-                                <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </main>
+            {/* Bottom spacing for mobile nav */}
+            <div className="h-24 md:h-16" />
         </div>
     );
 };

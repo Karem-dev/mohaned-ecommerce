@@ -1,262 +1,261 @@
 import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { 
-    X, 
-    Upload, 
-    ChevronDown,
-    Save,
-    Trash,
-    Layers,
-    AlertCircle
-} from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createAdminCategory, updateAdminCategory } from '../../services/adminService';
+import {
+    X,
+    Upload,
+    Save,
+    Layers,
+    AlertTriangle,
+    Loader2,
+    Image as ImageIcon,
+    Check
+} from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { createAdminCategory, updateAdminCategory } from '../../services/adminService';
 
-const CategoryModal = ({ isOpen, onClose, category = null, allCategories = [] }) => {
+// ── Bilingual Helper ────────────────────────────────────────────────────────
+const BiLabel = ({ en, ar, sub = false }) => (
+    <div className="flex flex-col gap-0.5 mb-3">
+        <span className={`${sub ? 'text-[8px]' : 'text-[9px]'} font-black uppercase tracking-[0.2em] italic text-[#b0004a]/40 group-focus-within:text-primary transition-colors`}>{en}</span>
+        <span className={`${sub ? 'text-[9px]' : 'text-[11px]'} font-bold text-zinc-300 group-focus-within:text-zinc-600 transition-colors`} style={{ fontFamily: "'Cairo', sans-serif" }}>{ar}</span>
+    </div>
+);
+
+const INITIAL_FORM = {
+    name: '',
+    slug: '',
+    parent_id: '',
+    is_active: true,
+    image: null,
+};
+
+const CategoryModal = ({ isOpen, onClose, category, allCategories }) => {
     const queryClient = useQueryClient();
-    const [formData, setFormData] = useState({
-        name: '',
-        parent_id: '',
-        is_active: true,
-        image: null,
-        description: ''
-    });
-    const [preview, setPreview] = useState(null);
-    const [errors, setErrors] = useState({});
+    const [formData, setFormData] = useState({ ...INITIAL_FORM });
+    const [previewUrl, setPreviewUrl] = useState('');
 
+    // Reset form when modal opens or category changes
     useEffect(() => {
         if (isOpen) {
-            document.body.style.overflow = 'hidden';
-            setErrors({});
             if (category) {
                 setFormData({
                     name: category.name || '',
+                    slug: category.slug || '',
                     parent_id: category.parent_id || '',
-                    is_active: !!category.is_active,
+                    is_active: category.is_active,
                     image: null,
-                    description: category.description || ''
                 });
-                setPreview(category.image_url);
+                setPreviewUrl(category.image_url || '');
             } else {
-                setFormData({
-                    name: '',
-                    parent_id: '',
-                    is_active: true,
-                    image: null,
-                    description: ''
-                });
-                setPreview(null);
+                // Clear all fields for new category
+                setFormData({ ...INITIAL_FORM });
+                setPreviewUrl('');
             }
         } else {
-            document.body.style.overflow = 'unset';
+            // Also clear on close
+            setFormData({ ...INITIAL_FORM });
+            setPreviewUrl('');
         }
-        
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
     }, [category, isOpen]);
+
+    const handleChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
+
+        // Auto-generate slug from name if adding new
+        if (name === 'name' && !category) {
+            setFormData(prev => ({
+                ...prev,
+                slug: value.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '')
+            }));
+        }
+    };
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setFormData(prev => ({ ...prev, image: file }));
+            setPreviewUrl(URL.createObjectURL(file));
+        }
+    };
 
     const mutation = useMutation({
         mutationFn: (data) => {
+            const fd = new FormData();
+            Object.keys(data).forEach(key => {
+                if (key === 'image' && data[key]) {
+                    fd.append('image', data[key]);
+                } else if (key === 'is_active') {
+                    fd.append(key, data[key] ? '1' : '0');
+                } else if (data[key] !== null) {
+                    fd.append(key, data[key]);
+                }
+            });
+
             if (category) {
-                return updateAdminCategory({ id: category.id, formData: data });
+                fd.append('_method', 'PUT');
+                return updateAdminCategory({ id: category.id, formData: fd });
             }
-            return createAdminCategory(data);
+            return createAdminCategory(fd);
         },
         onSuccess: () => {
             queryClient.invalidateQueries(['adminCategories']);
-            toast.success(category ? 'Sector metadata updated.' : 'New sector initialized.');
+            toast.success(`Category ${category ? 'updated' : 'created'} · تم الحفظ`);
             onClose();
         },
         onError: (err) => {
-            if (err.response?.status === 422) {
-                setErrors(err.response.data.errors);
-                toast.error('Validation failed. Check field protocols.');
-            } else {
-                toast.error(err.response?.data?.message || 'System transmission error.');
-            }
+            toast.error(err.response?.data?.message || 'Something went wrong · حدث خطأ');
         }
     });
 
-    if (!isOpen) return null;
-
     const handleSubmit = (e) => {
         e.preventDefault();
-        setErrors({});
-
-        const data = new FormData();
-        data.append('name', formData.name);
-        data.append('parent_id', formData.parent_id || '');
-        data.append('is_active', formData.is_active ? '1' : '0');
-        data.append('description', formData.description || '');
-
-        if (formData.image instanceof File) {
-            data.append('image', formData.image);
-        }
-
-        if (category) {
-            data.append('_method', 'PUT');
-        }
-
-        mutation.mutate(data);
+        mutation.mutate(formData);
     };
 
-    return createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-12 backdrop-blur-xl bg-slate-900/60 animate-fade-in font-manrope">
-            <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl max-h-full flex flex-col overflow-hidden relative border border-slate-100 scale-in transition-all duration-500">
-                
-                {/* Modal Header */}
-                <header className="px-10 py-8 flex justify-between items-center bg-slate-50 border-b border-slate-100 shrink-0">
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center">
-                            <Layers className="text-white w-5 h-5" />
-                        </div>
-                        <div>
-                            <h2 className="font-headline text-2xl font-black tracking-tighter text-slate-900 uppercase italic leading-none">
-                                {category ? 'Configure Sector' : 'Initialize Sector'}
-                            </h2>
-                            <p className="text-slate-400 font-body text-[10px] font-black uppercase tracking-[0.2em] mt-1 opacity-70">
-                                {category ? `ENTITY_ID: ${category.id}` : 'NEW_ENTITY_STUB'}
-                            </p>
-                        </div>
-                    </div>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-900 transition-all p-2 rounded-xl hover:bg-slate-100">
-                        <X className="w-6 h-6" />
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 lg:p-12 overflow-hidden selection:bg-primary/10 selection:text-primary">
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-[#351e24]/40 backdrop-blur-sm animate-in fade-in duration-500" onClick={onClose} />
+
+            {/* Modal Content */}
+            <div className={`relative w-full max-w-2xl bg-[#fffbfb] rounded-[4rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-500 flex flex-col max-h-full border border-white/50`}>
+
+                {/* Header */}
+                <div className="relative h-40 bg-[#fff9fa] border-b border-[#fde2e7] shrink-0 group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-rose-50/30 opacity-50" />
+                    <button onClick={onClose} className="absolute top-8 right-8 w-12 h-12 flex items-center justify-center bg-white rounded-2xl text-zinc-300 hover:text-primary hover:rotate-90 transition-all shadow-sm z-10 border border-[#fde2e7]">
+                        <X className="w-5 h-5" />
                     </button>
-                </header>
-
-                {/* Content */}
-                <form id="category-form" onSubmit={handleSubmit} className="p-10 overflow-y-auto no-scrollbar space-y-8 flex-1">
-                    
-                    {/* Visual Interface */}
-                    <div className="space-y-3">
-                        <label className="font-headline text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 block italic">Atmospheric Image</label>
-                        <div className={`group relative w-full h-48 bg-slate-50 rounded-xl flex flex-col items-center justify-center border-2 border-dashed transition-all cursor-pointer overflow-hidden ${errors.image ? 'border-red-500 bg-red-50/10' : 'border-slate-100 hover:border-slate-900'}`}>
-                            {preview ? (
-                                <img src={preview} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" alt="" />
-                            ) : (
-                                <div className="text-center">
-                                    <Upload className="w-10 h-10 text-slate-300 mb-4 mx-auto group-hover:scale-110 transition-transform duration-300 group-hover:text-slate-900" />
-                                    <p className="font-headline font-black text-slate-900 uppercase italic tracking-tighter">Upload Visual Data</p>
-                                    <p className="text-[9px] text-slate-400 mt-1 uppercase tracking-widest font-black">JPG / PNG / WEBP (5MB LIMIT)</p>
-                                </div>
-                            )}
-                            <input 
-                                className="absolute inset-0 opacity-0 cursor-pointer" 
-                                type="file" 
-                                accept="image/*"
-                                onChange={(e) => {
-                                    const file = e.target.files[0];
-                                    if (file) {
-                                        setFormData({ ...formData, image: file });
-                                        setPreview(URL.createObjectURL(file));
-                                    }
-                                }}
-                            />
-                            {preview && (
-                                <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                                    <span className="text-white text-[10px] font-black uppercase tracking-[0.3em] font-headline italic">Update Imagery</span>
-                                </div>
-                            )}
+                    <div className="absolute bottom-8 left-12 flex items-end gap-6">
+                        <div className="w-20 h-20 bg-white rounded-3xl shadow-xl flex items-center justify-center text-primary group-hover:scale-110 group-hover:rotate-6 transition-all duration-700 border border-[#fde2e7]">
+                            <Layers className="w-9 h-9" />
                         </div>
-                        {errors.image && <p className="text-red-500 text-[10px] font-black uppercase italic tracking-wider flex items-center gap-1.5 mt-2 transition-all"><AlertCircle className="w-3 h-3" /> {errors.image[0]}</p>}
+                        <div className="mb-2">
+                            <h3 className="text-4xl font-black text-[#351e24] tracking-tighter italic uppercase leading-tight">{category ? 'Edit' : 'New'} <span className="text-primary">Category</span></h3>
+                            <span className="text-lg font-bold text-zinc-300" style={{ fontFamily: "'Cairo', sans-serif" }}>{category ? 'تحديث القسم' : 'إضافة قسم جديد'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto no-scrollbar custom-scrollbar p-12 space-y-10">
+
+                    {/* Image Upload */}
+                    <div className="space-y-6">
+                        <BiLabel en="Category Image" ar="أيقونة أو صورة القسم" />
+                        <div className="flex gap-10 items-center">
+                            <div className="relative group/avatar">
+                                <div className="w-32 h-32 bg-white rounded-[2.5rem] overflow-hidden border-2 border-[#fde2e7] shadow-inner group-hover/avatar:border-primary transition-colors duration-500 relative">
+                                    {previewUrl ? (
+                                        <img src={previewUrl} className="w-full h-full object-cover grayscale group-hover/avatar:grayscale-0 transition-all duration-1000" alt="Preview" />
+                                    ) : (
+                                        <div className="w-full h-full flex flex-col items-center justify-center text-zinc-200">
+                                            <ImageIcon className="w-10 h-10 mb-2 opacity-20" />
+                                            <span className="text-[8px] font-black uppercase tracking-widest">No Image</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <label className="absolute bottom-0 right-0 w-10 h-10 bg-primary text-white rounded-2xl flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-xl shadow-primary/20 hover:rotate-12">
+                                    <Upload className="w-4 h-4" />
+                                    <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+                                </label>
+                            </div>
+                            <div className="max-w-xs space-y-2">
+                                <p className="text-[10px] font-black italic text-[#351e24] uppercase tracking-wider leading-none">Image Guidelines</p>
+                                <p className="text-zinc-400 text-[9px] font-medium leading-relaxed italic">Upload a high-quality image (1000×1000px recommended). JPG/PNG supported.</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="space-y-8">
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                                <label className="font-headline text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 block italic">Sector Designation</label>
-                                {errors.name && <p className="text-red-500 text-[9px] font-black uppercase italic tracking-wider flex items-center gap-1 animate-pulse">Error Deteceted</p>}
-                            </div>
-                            <input 
-                                className={`w-full bg-white border-0 border-b py-3 px-0 font-headline font-black text-2xl placeholder:text-slate-200 text-slate-900 uppercase italic tracking-tight outline-none transition-all ${errors.name ? 'border-red-500' : 'border-slate-100 focus:border-slate-900'}`} 
-                                placeholder="THE SUMMER GRID" 
-                                type="text"
+                    {/* Name & Slug */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-4 group">
+                            <BiLabel en="Category Name" ar="اسم القسم" sub />
+                            <input
+                                required
+                                name="name"
                                 value={formData.name}
-                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                onChange={handleChange}
+                                placeholder="e.g. Summer Collection"
+                                className="w-full bg-[#fff9fa]/50 px-6 py-4 rounded-2xl border border-[#fde2e7] text-[11px] font-black italic uppercase tracking-wider text-[#351e24] focus:ring-4 focus:ring-rose-50 focus:border-primary/20 transition-all outline-none"
                             />
-                            {errors.name && <p className="text-red-500 text-[10px] font-black uppercase italic tracking-wider flex items-center gap-1.5"><AlertCircle className="w-3 h-3" /> {errors.name[0]}</p>}
                         </div>
-
-                        <div className="space-y-3">
-                            <label className="font-headline text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 block italic">Hierarchy Level</label>
-                            <div className="relative group">
-                                <select 
-                                    className="w-full bg-white border-0 border-b border-slate-100 focus:ring-0 focus:border-slate-900 py-3 px-0 font-headline font-black text-lg appearance-none cursor-pointer text-slate-900 uppercase italic tracking-tight outline-none"
-                                    value={formData.parent_id}
-                                    onChange={e => setFormData({ ...formData, parent_id: e.target.value })}
-                                >
-                                    <option value="">Root Level Protocol</option>
-                                    {allCategories.filter(c => c.id !== category?.id && !c.parent_id).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                </select>
-                                <ChevronDown className="absolute right-0 top-3 pointer-events-none text-slate-300 w-5 h-5 group-hover:text-slate-900 transition-colors" />
-                            </div>
-                            {errors.parent_id && <p className="text-red-500 text-[10px] font-black uppercase italic tracking-wider flex items-center gap-1.5"><AlertCircle className="w-3 h-3" /> {errors.parent_id[0]}</p>}
+                        <div className="space-y-4 group">
+                            <BiLabel en="URL Slug" ar="معرف الرابط" sub />
+                            <input
+                                required
+                                name="slug"
+                                value={formData.slug}
+                                onChange={handleChange}
+                                placeholder="summer-collection"
+                                className="w-full bg-[#fff9fa]/50 px-6 py-4 rounded-2xl border border-[#fde2e7] text-[11px] font-black italic uppercase tracking-wider text-primary focus:ring-4 focus:ring-rose-50 focus:border-primary/20 transition-all outline-none"
+                            />
                         </div>
+                    </div>
 
-                        <div className="space-y-3">
-                                <label className="font-headline text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 block italic">Sector Description</label>
-                                <textarea 
-                                    className="w-full bg-white border-b border-slate-100 focus:border-slate-900 py-3 font-body text-sm placeholder:text-slate-200 resize-none outline-none text-slate-600 font-medium transition-all" 
-                                    placeholder="Enter technical details and sector purpose..." 
-                                    rows="3"
-                                    value={formData.description}
-                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                ></textarea>
-                                {errors.description && <p className="text-red-500 text-[10px] font-black uppercase italic tracking-wider flex items-center gap-1.5"><AlertCircle className="w-3 h-3" /> {errors.description[0]}</p>}
+                    {/* Parent & Status */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-4 group">
+                            <BiLabel en="Parent Category" ar="القسم الأب" sub />
+                            <select
+                                name="parent_id"
+                                value={formData.parent_id}
+                                onChange={handleChange}
+                                className="w-full bg-[#fff9fa]/50 px-6 py-4 rounded-2xl border border-[#fde2e7] text-[11px] font-black italic uppercase tracking-wider text-zinc-500 focus:ring-4 focus:ring-rose-50 focus:border-primary/20 transition-all outline-none appearance-none"
+                            >
+                                <option value="">None (Top Level)</option>
+                                {allCategories.filter(c => !c.parent_id && c.id !== category?.id).map(c => (
+                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                ))}
+                            </select>
                         </div>
-
-                        <div className="flex items-center justify-between p-6 bg-slate-50 rounded-xl border border-slate-100 group">
-                            <div className="space-y-0.5">
-                                <p className="font-headline font-black text-slate-900 uppercase italic text-sm group-hover:translate-x-1 transition-transform">Visibility Signal</p>
-                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest opacity-60">Should this sector be visible to users?</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input 
-                                    type="checkbox" 
-                                    className="sr-only peer"
-                                    checked={formData.is_active}
-                                    onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
-                                />
-                                <div className="w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-slate-900"></div>
+                        <div className="space-y-6">
+                            <BiLabel en="Status" ar="تفعيل القسم" sub />
+                            <label className="flex items-center gap-4 cursor-pointer group/toggle w-fit">
+                                <div className="relative">
+                                    <input
+                                        type="checkbox"
+                                        name="is_active"
+                                        checked={formData.is_active}
+                                        onChange={handleChange}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-14 h-8 bg-zinc-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary transition-colors"></div>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-black uppercase italic tracking-widest text-[#351e24] group-hover/toggle:text-primary transition-colors">Visible Online</span>
+                                    <span className="text-[8px] font-bold text-zinc-300 -mt-0.5">Active Status</span>
+                                </div>
                             </label>
                         </div>
                     </div>
                 </form>
 
-                {/* Footer */}
-                <footer className="px-10 py-8 bg-white border-t border-slate-100 flex items-center justify-end gap-6 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.01)]">
-                    <button 
-                        onClick={onClose}
-                        type="button"
-                        className="font-headline font-black text-slate-400 hover:text-slate-900 px-6 py-2 transition-all uppercase italic text-xs tracking-[0.2em]" 
+                {/* Footer Actions */}
+                <div className="p-10 bg-[#fff9fa] border-t border-[#fde2e7] flex items-center justify-between gap-8 shrink-0">
+                    <button onClick={onClose} className="text-zinc-400 text-[10px] font-black uppercase tracking-widest italic hover:text-primary transition-colors hover:underline decoration-2 underline-offset-8">Cancel</button>
+                    <button
+                        disabled={mutation.isPending}
+                        onClick={handleSubmit}
+                        className="bg-[#351e24] text-white px-12 py-5 rounded-[2rem] font-black text-[10px] uppercase tracking-widest italic hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all shadow-2xl shadow-[#351e24]/20 flex items-center gap-3 group"
                     >
-                        Abort
-                    </button>
-                    <button 
-                        form="category-form"
-                        disabled={mutation.isLoading}
-                        className="bg-slate-900 text-white font-headline font-black italic tracking-[0.2em] uppercase px-12 py-5 rounded shadow-xl hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-3 min-w-[200px] justify-center" 
-                    >
-                        {mutation.isLoading ? (
-                            <>
-                                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                                Processing...
-                            </>
+                        {mutation.isPending ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                            <>
-                                <Save className="w-4 h-4" />
-                                {category ? 'Update Grid' : 'Deploy Sector'}
-                            </>
+                            <Save className="w-4 h-4 group-hover:rotate-12 transition-transform" />
                         )}
+                        {category ? 'Save Changes' : 'Create Category'}
                     </button>
-                </footer>
+                </div>
             </div>
-        </div>,
-        document.body
+        </div>
     );
 };
 
 export default CategoryModal;
-

@@ -1,42 +1,88 @@
 @import "tailwindcss";
 
 @theme {
-  /* Stitch Design Tokens - Mirroring the Provided Image */
-  --color-primary: #ab3600;
-  --color-primary-vibrant: #ff5f1f; /* The vibrant orange in the banner/button */
-  --color-surface: #ffffff;
-  --color-surface-low: #f9f9f9;
-  --color-surface-container: #eeeeee;
-  --color-surface-container-highest: #e2e2e2;
-  
-  --color-on-background: #1a1c1c;
-  --color-secondary: #5f5e5e;
-  --color-error: #ba1a1a;
-  
-  --font-headline: "Epilogue", sans-serif;
-  --font-body: "Manrope", sans-serif;
+  /* Rose Store Design Tokens */
+  --color-primary: #b0004a;
+  --color-primary-container: #d81b60;
+  --color-primary-fixed: #ffd9de;
+  --color-on-primary-fixed: #3f0016;
 
-  --radius-default: 0px; /* Most elements in the image look very sharp or slightly rounded */
-  --radius-button: 4px;
+  --color-secondary: #964261;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #fe97b9;
+  --color-on-secondary-container: #792b4a;
+  --color-secondary-fixed: #ffd9e2;
+  --color-secondary-fixed-dim: #ffb0c9;
+  --color-on-secondary-fixed: #3e001e;
+  --color-on-secondary-fixed-variant: #792b4a;
+
+  --color-tertiary: #ab1155;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #cc326e;
+  --color-on-tertiary-container: #fff2f4;
+  --color-tertiary-fixed: #ffd9e1;
+  --color-tertiary-fixed-dim: #ffb1c5;
+  --color-on-tertiary-fixed: #3f001a;
+  --color-on-tertiary-fixed-variant: #8f0045;
+
+  --color-on-primary: #ffffff;
+  --color-on-primary-fixed-variant: #90003b;
+
+  --color-inverse-surface: #313031;
+  --color-inverse-on-surface: #f4f0f1;
+  --color-inverse-primary: #ffb2bf;
+
+  --color-surface: #fcf8f9;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-dim: #ddd9da;
+  --color-surface-bright: #fcf8f9;
+  --color-surface-container-low: #f6f3f4;
+  --color-surface-container: #f1edee;
+  --color-surface-container-high: #ebe7e8;
+  --color-surface-container-highest: #e5e1e2;
+  --color-surface-variant: #e5e1e2;
+
+  --color-on-surface: #1c1b1c;
+  --color-on-surface-variant: #5a4044;
+  --color-outline: #8e6f74;
+  --color-outline-variant: #e3bdc3;
+
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+
+  --font-headline: "Plus Jakarta Sans", sans-serif;
+  --font-body: "Plus Jakarta Sans", sans-serif;
+
+  --color-background: #fcf8f9;
+  --color-on-background: #1c1b1c;
+  --color-primary-vibrant: #ff2e6a;
+
+  --radius-default: 1rem;
+  --radius-lg: 2rem;
+  --radius-xl: 3rem;
+  --radius-button: 9999px;
 }
 
 @layer base {
   body {
     @apply font-body bg-white text-on-background antialiased;
   }
-  
-  h1, h2, h3 {
+
+  h1,
+  h2,
+  h3 {
     @apply font-headline font-black uppercase tracking-tight;
   }
 }
 
 @layer components {
-  .btn-primary {
-    @apply bg-primary-vibrant text-white px-8 py-4 font-black uppercase tracking-widest text-[10px] transition-all hover:brightness-110 active:scale-95;
+  .btn-stitch-primary {
+    @apply relative bg-primary text-white font-black uppercase tracking-[0.3em] overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] shadow-2xl;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-vibrant) 100%);
   }
-  
-  .btn-outline {
-    @apply bg-white border border-on-background text-on-background px-8 py-4 font-black uppercase tracking-widest text-[10px] transition-all hover:bg-on-background hover:text-white active:scale-95;
+
+  .btn-stitch-secondary {
+    @apply border-2 border-on-background text-on-background bg-white font-black uppercase tracking-[0.3em] transition-all hover:bg-on-background hover:text-white active:scale-95;
   }
 
   .nav-link {
@@ -49,24 +95,49 @@
   }
 }
 
-.custom-scrollbar::-webkit-scrollbar { width: 4px; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #ab3600; }
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
 
-.hide-scrollbar::-webkit-scrollbar { display: none; }
-.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #D81B60;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
 .editorial-gradient {
-  background: linear-gradient(135deg, #ab3600 0%, #ff5f1f 100%);
+  background: linear-gradient(135deg, #D81B60 0%, #FF2E6A 100%);
 }
 
 @keyframes fade-in-up {
-  0% { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes bounce-slow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .animate-fade-in-up {
@@ -78,13 +149,25 @@
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes scale-in {
-  from { opacity: 0; transform: scale(0.95) translateY(10px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .animate-fade-in {

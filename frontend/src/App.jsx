@@ -4,7 +4,7 @@ import { router } from './router';
 
 function App() {
   return (
-    <div className="Mohaned store-app">
+    <div className="Rose store-app">
       <RouterProvider router={router} />
     </div>
   );

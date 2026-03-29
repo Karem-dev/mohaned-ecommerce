@@ -14,7 +14,10 @@ const ForgotPasswordPage = () => {
         mutationFn: (data) => axiosInstance.post('/auth/forgot-password', data),
         onSuccess: () => {
             toast.success('Recovery protocol dispatched.');
-            navigate('/verify-otp', { state: { email } });
+            setIsSent(true);
+            setTimeout(() => {
+                navigate('/verify-otp', { state: { email } });
+            }, 3000);
         },
         onError: (err) => toast.error(err.response?.data?.message || 'Transmission failure.')
     });
@@ -26,53 +29,42 @@ const ForgotPasswordPage = () => {
 
     return (
         <main className="min-h-screen flex items-center justify-center p-4 md:p-8 font-body bg-surface text-on-surface antialiased">
-            <div className="w-full max-w-5xl bg-surface-container-lowest editorial-shadow rounded-lg overflow-hidden flex min-h-[600px]">
-                
-                {/* Left Panel - Image */}
-                <div className="hidden md:flex md:w-1/2 relative bg-surface-container-highest overflow-hidden">
+            <div className="w-full max-w-5xl bg-background editorial-shadow rounded-xl overflow-hidden flex min-h-[750px]">
+                {/* Left Panel: Branding & Editorial Image */}
+                <div className="hidden md:flex md:w-1/2 relative bg-primary-soft overflow-hidden">
                     <img
                         alt="High-end fashion editorial"
-                        className="absolute inset-0 w-full h-full object-cover opacity-90 transition-transform duration-700 hover:scale-105"
-                        src="https://images.unsplash.com/photo-1549439602-43ebca2327af?q=80&w=1200"
+                        className="absolute inset-0 w-full h-full object-cover opacity-95 transition-transform duration-1000 hover:scale-110"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCa_fIKdvcZ7S9AR_zNyzUrKd7T4HN5TOOJnl2fvIZ-czPrG_OtB-kMLg7DO7TMItE872nbVgmYeepl7yauhyAD_4yXIcVhceYqAWwnCTiJd6AVlARI5kLwOuiPBKxGiUISMZUJFyZTEumcjCEaVxRJ0kx2QqmiSn1lriqMXSlvoZUoXgKclKfMcxtxODgaFv05-9S5KyHVBPuXT7vwT-Jgw59d9g1LmmApBQdJ-KZdQ1mTqS_bh7VxXOD6uYwKDMixzp182QES5XHl"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-on-background/60 to-transparent flex flex-col justify-end p-12">
-                        <h1 className="font-headline text-5xl font-extrabold text-surface-container-lowest tracking-tighter mb-4">
-                            MOHANED
-                        </h1>
-                        <p className="font-label text-surface-container-lowest/80 text-sm uppercase tracking-[0.2em]">
-                            Security Protocols • Identity Recovery
-                        </p>
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent flex flex-col justify-end p-16">
+                        <h1 className="font-headline text-5xl font-extrabold text-white tracking-tight mb-4 uppercase">Rose GALERIE</h1>
+                        <div className="h-1 w-12 bg-white rounded-full mb-6"></div>
+                        <p className="font-label text-white/90 text-[10px] uppercase tracking-[0.3em] font-bold">The Digital Curator • High-End Editorial</p>
                     </div>
                 </div>
 
-                {/* Right Panel - Form */}
-                <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
-                    <div className="md:hidden mb-8">
-                        <span className="font-headline text-2xl font-extrabold tracking-tighter text-on-background">
-                            MOHANED
-                        </span>
+                {/* Right Panel: Form Panel */}
+                <div className="w-full md:w-1/2 p-8 md:p-16 flex flex-col justify-center">
+                    {/* Mobile Logo */}
+                    <div className="md:hidden mb-10 text-center">
+                        <span className="font-headline text-3xl font-extrabold tracking-tight text-primary uppercase">Rose GALERIE</span>
                     </div>
 
                     <div className="max-w-md mx-auto w-full">
                         {!isSent ? (
-                            <form onSubmit={handleSubmit} className="space-y-10">
-                                <header className="space-y-4">
-                                    <h2 className="font-headline text-4xl font-black text-on-background tracking-tighter uppercase italic leading-none">
-                                        Recover Access.
-                                    </h2>
-                                    <p className="text-secondary text-sm font-medium">
-                                        Input your digital address to receive an authentication packet.
-                                    </p>
+                            <form onSubmit={handleSubmit} className="space-y-8">
+                                <header className="mb-10 text-center md:text-left">
+                                    <h2 className="font-headline text-4xl font-bold text-on-surface mb-3 tracking-tight">Reset Access.</h2>
+                                    <p className="text-on-surface-variant text-base">Enter your email for identity recovery.</p>
                                 </header>
 
                                 <div className="space-y-2">
-                                    <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-secondary/50 mb-1">
-                                        Email Address
-                                    </label>
-                                    <input 
-                                        type="email" 
-                                        className="w-full bg-transparent py-4 font-body text-on-background border-b-2 border-slate-100 focus:border-slate-900 outline-none transition-all px-0" 
-                                        placeholder="DESIGNATE EMAIL"
+                                    <label className="block text-[11px] font-bold uppercase tracking-widest text-on-surface-variant ml-4">Email Address</label>
+                                    <input
+                                        className="w-full bg-white py-4 px-6 rounded-full border border-outline focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-body text-on-surface outline-none"
+                                        placeholder="curator@Rosegalerie.com"
+                                        type="email"
                                         required
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
@@ -81,33 +73,41 @@ const ForgotPasswordPage = () => {
 
                                 <div className="space-y-6">
                                     <button
+                                        className="w-full py-5 bg-primary text-white font-headline text-sm font-bold uppercase tracking-[0.2em] rounded-full shadow-lg shadow-primary/20 hover:bg-primary-hover active:scale-[0.98] transition-all disabled:opacity-50"
                                         type="submit"
                                         disabled={forgotPasswordMutation.isLoading}
-                                        className="w-full py-5 bg-on-background text-white font-headline text-xs font-black uppercase tracking-[0.3em] rounded-sm shadow-2xl hover:bg-primary-vibrant active:scale-[0.98] transition-all"
                                     >
-                                        {forgotPasswordMutation.isLoading ? 'Processing...' : 'Dispatch Packet'}
+                                        {forgotPasswordMutation.isLoading ? 'Dispatching...' : 'Restore Access'}
                                     </button>
 
-                                    <Link to="/login" className="block text-center text-[10px] font-black uppercase tracking-widest text-secondary hover:text-on-background transition-colors italic">
-                                        Return to Core Protocols
+                                    <Link to="/login" className="block text-center text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-all">
+                                        Return to Core Interface
                                     </Link>
                                 </div>
                             </form>
                         ) : (
                             <div className="text-center space-y-10 animate-fade-in">
-                                <div className="w-24 h-24 bg-primary-vibrant/10 rounded-full flex items-center justify-center mx-auto">
-                                    <span className="material-symbols-outlined text-4xl text-primary-vibrant">mark_email_read</span>
+                                <div className="w-24 h-24 bg-primary-soft rounded-full flex items-center justify-center mx-auto editorial-shadow">
+                                    <span className="material-symbols-outlined text-4xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>mark_email_read</span>
                                 </div>
                                 <div className="space-y-4">
-                                    <h2 className="text-3xl font-black text-on-background tracking-tighter uppercase italic">PACKET DISPATCHED</h2>
-                                    <p className="text-sm font-medium text-secondary leading-relaxed">System has transmitted a recovery packet. Verify your inbox to authenticate.</p>
+                                    <h2 className="text-4xl font-bold text-on-surface tracking-tight">Link Dispatched.</h2>
+                                    <p className="text-base text-on-surface-variant leading-relaxed">Check your curated inbox to authenticate and continue your transition.</p>
                                 </div>
-                                <Link to="/login" className="inline-block px-12 py-4 bg-on-background text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-sm hover:bg-primary-vibrant transition-all">
-                                    Login Interface
-                                </Link>
+                                <div className="pt-6">
+                                    <div className="w-12 h-1 bg-primary/20 rounded-full mx-auto overflow-hidden relative">
+                                        <div className="absolute inset-0 bg-primary animate-progress"></div>
+                                    </div>
+                                    <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-primary mt-4">Redirecting to Verification...</p>
+                                </div>
                             </div>
                         )}
                     </div>
+
+                    {/* Footer Copyright */}
+                    <footer className="mt-auto pt-10 flex justify-center items-center text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">
+                        <span>© 2026 Rose GALERIE. Radiant Editorial.</span>
+                    </footer>
                 </div>
             </div>
         </main>

@@ -54,8 +54,10 @@ const CategoriesPage = () => {
                         <Link 
                             key={category.id} 
                             to={`/category/${category.slug}`}
-                            className="group relative bg-slate-50 rounded-[2.5rem] p-10 h-[400px] flex flex-col justify-between overflow-hidden border border-slate-100 hover:border-slate-900 transition-all duration-500 hover:-translate-y-2 shadow-sm hover:shadow-2xl shadow-slate-900/5"
+                            className="group relative bg-slate-50 rounded-[2.5rem] p-10 h-[600px] flex flex-col justify-between overflow-hidden border border-slate-100 hover:border-slate-900 transition-all duration-500 hover:-translate-y-2 shadow-sm hover:shadow-2xl shadow-slate-900/5"
                         >
+                            <img src={category.image_url} alt="" />
+
                             {/* Decorative logic or background */}
                             <div className="absolute top-0 right-0 p-12 opacity-5 scale-150 rotate-12 group-hover:scale-110 transition-transform duration-700">
                                 <ShoppingBag className="w-48 h-48 text-slate-900" />
@@ -67,12 +69,10 @@ const CategoriesPage = () => {
                                     <ArrowRight className="w-6 h-6 text-slate-300 group-hover:text-slate-900 transition-colors" />
                                 </div>
                                 <div className="mt-8 space-y-2">
-                                    <h3 className="text-4xl font-black text-slate-950 uppercase italic tracking-tighter leading-tight">
+                                    <h3 className="text-4xl font-black text-primary uppercase italic tracking-tighter leading-tight">
                                         {category.name}
                                     </h3>
-                                    <p className="text-slate-400 font-bold text-sm" style={{ fontFamily: "'Cairo', sans-serif" }}>
-                                        {category.name_ar || 'تصنيف متميز'}
-                                    </p>
+                                   
                                 </div>
                             </div>
 

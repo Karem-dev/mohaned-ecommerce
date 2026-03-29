@@ -1,0 +1,68 @@
+name: Deploy to InfinityFree via FTP
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  ftp-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Build Frontend
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: |
+          npm install
+          npm run build
+
+      # Setup PHP for Composer
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, intl
+
+      # Install Backend Dependencies
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: composer install --no-dev --optimize-autoloader
+
+      # Prepare for Deployment (Integrated Layout)
+      - name: Prepare Deployment Directory
+        run: |
+          mkdir -p deploy
+          # 1. Copy Laravel core files (excluding node_modules and public)
+          cp -r backend/* deploy/
+          rm -rf deploy/public deploy/node_modules deploy/.env
+          
+          # 2. Create htdocs content (everything from public)
+          mkdir -p htdocs
+          cp -r backend/public/* htdocs/
+          
+          # 3. Adjust index.php to point to correct relative folder (if htdocs and laravel are siblings)
+          # OR if EVERYTHING is inside htdocs (InfinityFree standard)
+          # We'll put everything inside htdocs for simplicity on shared hosting
+          mv deploy/* htdocs/
+          # No need to adjust paths if both are in htdocs, but we need to point index.php to the same folder
+          sed -i "s|require __DIR__.'/../vendor/autoload.php'|require __DIR__.'/vendor/autoload.php'|g" htdocs/index.php
+          sed -i "s|require_once __DIR__.'/../bootstrap/app.php'|require_once __DIR__.'/bootstrap/app.php'|g" htdocs/index.php
+          sed -i "s|__DIR__.'/../storage/framework/maintenance.php'|__DIR__.'/storage/framework/maintenance.php'|g" htdocs/index.php
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./htdocs/
+          server-dir: /htdocs/

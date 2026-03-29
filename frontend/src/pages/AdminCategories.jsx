@@ -1,20 +1,19 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-    Plus, 
-    Edit, 
-    Trash2, 
-    Layers, 
-    ChevronRight, 
+import {
+    Plus,
+    Edit,
+    Trash2,
+    Layers,
+    ChevronRight,
     Search,
-    Image as ImageIcon,
-    Upload,
-    X,
-    Save,
-    ChevronDown,
-    AlertTriangle
+    AlertTriangle,
+    RefreshCcw,
+    FolderTree,
+    LayoutGrid
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { Link } from 'react-router-dom';
 import { getAdminCategories, deleteAdminCategory } from '../services/adminService';
 import CategoryModal from '../components/admin/CategoryModal';
 
@@ -30,7 +29,7 @@ const AdminCategories = () => {
     });
 
     const allCategories = categoriesResp?.data || [];
-    
+
     // Group children under parents for better visibility
     const displayCategories = [];
     const parentCategories = allCategories
@@ -59,127 +58,141 @@ const AdminCategories = () => {
         mutationFn: deleteAdminCategory,
         onSuccess: () => {
             queryClient.invalidateQueries(['adminCategories']);
-            toast.success('Category removed successfully.');
+            toast.success('Category removed');
             setDeleteId(null);
         },
         onError: (err) => {
-            toast.error(err.response?.data?.message || 'Delete operation failed.');
+            toast.error(err.response?.data?.message || 'Failed to delete category.');
             setDeleteId(null);
         }
     });
 
-    const confirmDelete = (id) => {
-        setDeleteId(id);
-    };
-
     if (isLoading) return (
-        <div className="flex flex-col items-center justify-center py-32 space-y-4">
-            <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
-            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs animate-pulse">Synchronizing Sectors...</p>
+        <div className="pt-40 pb-40 text-center bg-[#fffbfb] min-h-screen">
+            <div className="w-12 h-12 border-[3px] border-rose-100 border-t-primary rounded-full animate-spin mx-auto mb-8 shadow-sm"></div>
+            <p className="font-bold text-primary/50 uppercase tracking-[0.2em] text-[10px] italic">Loading Catalog...</p>
         </div>
     );
 
     if (isError) return (
-        <div className="text-center py-32">
-            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-xl font-black text-slate-900 uppercase italic">Connection Failure</h3>
-            <p className="text-slate-400 mt-2 font-medium">Unable to retrieve category grid data.</p>
+        <div className="text-center py-40 bg-white rounded-[3rem] border border-[#fde2e7] shadow-sm animate-in fade-in duration-700">
+            <AlertTriangle className="w-16 h-16 text-rose-300 mx-auto mb-8" />
+            <h3 className="text-3xl font-bold text-[#351e24] uppercase italic tracking-tighter">Connection Error</h3>
+            <p className="text-[#351e24]/40 mt-4 font-bold uppercase tracking-widest text-[10px]">Unable to load data from server.</p>
         </div>
     );
 
     return (
-        <div className="space-y-12">
-            
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-               <div>
-                  <h2 className="text-4xl font-black font-headline tracking-tighter text-slate-900 uppercase italic leading-none">Category Inventory</h2>
-                  <p className="text-slate-400 font-body mt-2 text-sm uppercase tracking-widest font-black opacity-60">Architect your marketplace taxonomies.</p>
-               </div>
-               <button 
-                  onClick={handleAdd}
-                  className="bg-slate-900 text-white px-8 py-4 rounded-sm shadow-2xl hover:bg-slate-800 transition-all flex items-center justify-center gap-3 font-headline font-black text-xs tracking-[0.2em] uppercase italic group shrink-0"
-               >
-                   <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" /> 
-                   Add New Sector
-               </button>
-            </div>
+        <div className="space-y-12 pb-24 font-['Plus_Jakarta_Sans'] antialiased">
 
-            {/* Table Core Container */}
-            <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse font-body min-w-[800px]">
-                        <thead className="bg-slate-50 border-b border-slate-100">
-                            <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">
-                                <th className="py-6 px-10 w-16">
-                                    <div className="w-4 h-4 rounded border-2 border-slate-200" />
-                                </th>
-                                <th className="py-6 px-4">Entity Identity</th>
-                                <th className="py-6 px-4">Volume</th>
-                                <th className="py-6 px-4">Status</th>
-                                <th className="py-6 px-4">Tier</th>
-                                <th className="py-6 px-8 text-right w-40">Operations</th>
+            {/* Header */}
+            <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 border-b border-[#fde2e7]/30 pb-12 animate-in fade-in slide-in-from-top-4 duration-700">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-widest">
+                        <FolderTree className="w-4 h-4" />
+                        Hierarchy Setup
+                    </div>
+                    <h1 className="text-4xl lg:text-6xl font-bold text-[#351e24] tracking-tighter uppercase italic leading-none">
+                        Category <span className="text-primary">Management</span>
+                    </h1>
+                </div>
+                <div className="flex flex-wrap gap-4">
+                    <button
+                        onClick={() => {
+                            queryClient.invalidateQueries(['adminCategories']);
+                            toast.success('List synced');
+                        }}
+                        className="px-8 py-5 bg-white border border-[#fde2e7] text-[#351e24] rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-rose-50 transition-all shadow-sm flex items-center gap-3 group"
+                    >
+                        <RefreshCcw className="w-4 h-4" /> Sync
+                    </button>
+                    <button
+                        onClick={handleAdd}
+                        className="px-12 py-5 bg-[#351e24] text-white rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-xl shadow-[#351e24]/10 flex items-center gap-3"
+                    >
+                        <Plus className="w-4 h-4" /> New Category
+                    </button>
+                </div>
+            </header>
+
+            {/* Matrix Display Table */}
+            <div className="bg-white rounded-[3rem] border border-[#fde2e7]/40 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-12 duration-1000">
+                <div className="overflow-x-auto custom-scrollbar">
+                    <table className="w-full text-left border-collapse min-w-[1000px]">
+                        <thead>
+                            <tr className="text-[10px] font-bold text-[#351e24]/40 uppercase tracking-[0.2em] bg-[#fffbfb] border-b border-[#fde2e7]/30 italic">
+                                <th className="py-8 px-10">Collection Details</th>
+                                <th className="py-8 px-4 text-center">Items</th>
+                                <th className="py-8 px-4 text-center">Status</th>
+                                <th className="py-8 px-4 text-center">Structure</th>
+                                <th className="py-8 px-10 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-50">
+                        <tbody className="divide-y divide-[#fde2e7]/10">
                             {displayCategories.length > 0 ? displayCategories.map((cat) => (
-                                <tr key={cat.id} className={`hover:bg-slate-50/50 transition-colors group ${cat.parent_id ? 'bg-slate-50/20' : ''}`}>
-                                    <td className="py-6 px-10">
-                                        <div className="w-4 h-4 rounded border border-slate-200 group-hover:border-slate-400 transition-colors" />
-                                    </td>
-                                    <td className="py-6 px-4">
-                                        <div className="flex items-center gap-5">
-                                            <div className={`w-12 h-12 rounded-lg bg-slate-100 overflow-hidden shrink-0 border border-slate-200 group-hover:scale-105 transition-all duration-500 shadow-sm ${cat.parent_id ? 'ml-8 w-10 h-10' : ''}`}>
-                                                <img src={cat.image_url} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-transform duration-700" alt="" onError={(e) => e.target.src = 'https://via.placeholder.com/400?text=NO+IMAGE'} />
+                                <tr key={cat.id} className={`hover:bg-rose-50/10 transition-all group cursor-pointer ${cat.parent_id ? 'bg-[#fffbfb]/50' : ''}`} onClick={() => handleEdit(cat)}>
+                                    <td className="py-8 px-10">
+                                        <div className="flex items-center gap-6">
+                                            <div className={`w-16 h-16 rounded-2xl bg-zinc-50 overflow-hidden shrink-0 border border-[#fde2e7]/30 group-hover:scale-105 transition-transform duration-700 shadow-sm ${cat.parent_id ? 'ml-12 w-12 h-12' : ''}`}>
+                                                <img src={cat.image_url} className="w-full h-full object-cover" alt="" onError={(e) => e.target.src = 'https://ui-avatars.com/api/?name=C&background=eee&color=333'} />
                                             </div>
                                             <div className="min-w-0">
-                                                <p className={`font-headline font-black text-slate-900 tracking-tighter truncate italic uppercase leading-tight ${cat.parent_id ? 'text-base' : 'text-lg'}`}>
+                                                <p className={`font-bold text-[#351e24] tracking-tight uppercase italic leading-tight group-hover:text-primary transition-colors ${cat.parent_id ? 'text-lg' : 'text-xl'}`}>
                                                     {cat.name}
                                                 </p>
-                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1 opacity-60">CID: {cat.id} <span className="mx-1">•</span> SLUG: {cat.slug}</p>
+                                                <div className="flex items-center gap-2 mt-2">
+                                                    <span className="text-[9px] font-bold text-[#351e24]/20 uppercase tracking-widest italic">{cat.slug}</span>
+                                                    {cat.parent_id && <span className="text-[8px] font-bold text-primary/40 uppercase tracking-[0.2em]">Sub-Category</span>}
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="py-6 px-4">
-                                        <span className="text-[10px] font-black italic tracking-tighter tabular-nums px-3 py-1 bg-slate-100 rounded-full text-slate-600">{cat.products_count || 0} UNITS</span>
+                                    <td className="py-8 px-4 text-center">
+                                        <div className="flex flex-col items-center">
+                                            <span className="text-2xl font-bold italic tracking-tighter text-[#351e24] tabular-nums leading-none">{cat.products_count || 0}</span>
+                                            <span className="text-[8px] font-bold uppercase tracking-widest mt-1 text-[#351e24]/20 italic">Products</span>
+                                        </div>
                                     </td>
-                                    <td className="py-6 px-4">
-                                        <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border transition-colors ${cat.is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
-                                            {cat.is_active ? 'Online' : 'Offline'}
+                                    <td className="py-8 px-4 text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                             <div className={`w-2 h-2 rounded-full ${cat.is_active ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'bg-[#351e24]/20'}`} />
+                                             <span className={`text-[9px] font-bold uppercase tracking-widest italic ${cat.is_active ? 'text-emerald-600' : 'text-[#351e24]/30'}`}>
+                                                {cat.is_active ? 'Active' : 'Private'}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="py-8 px-4 text-center">
+                                        <span className={`text-[10px] font-bold uppercase tracking-widest italic ${cat.parent_id ? 'text-[#351e24]/30' : 'text-primary'}`}>
+                                            {cat.parent_id ? 'Nested' : 'Primary'}
                                         </span>
                                     </td>
-                                    <td className="py-6 px-4">
-                                        <span className={`text-[10px] font-black uppercase tracking-widest italic ${cat.parent_id ? 'text-slate-400' : 'text-slate-900'}`}>
-                                            {cat.parent_id ? 'Subordinate' : 'Primary'}
-                                        </span>
-                                    </td>
-                                    <td className="py-6 px-8 text-right">
+                                    <td className="py-8 px-10 text-right">
                                         {deleteId === cat.id ? (
-                                            <div className="flex items-center justify-end gap-2 animate-in fade-in slide-in-from-right-2 duration-300">
-                                                <button 
+                                            <div className="flex items-center justify-end gap-3 animate-in fade-in slide-in-from-right-4" onClick={(e) => e.stopPropagation()}>
+                                                <button
                                                     onClick={() => deleteMutation.mutate(cat.id)}
-                                                    className="bg-red-600 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded hover:bg-red-700 transition-colors"
+                                                    className="bg-primary text-white text-[9px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl hover:bg-rose-600 shadow-lg shadow-primary/20"
                                                 >
-                                                    Confirm
+                                                    Delete
                                                 </button>
-                                                <button 
+                                                <button
                                                     onClick={() => setDeleteId(null)}
-                                                    className="text-slate-400 text-[9px] font-black uppercase tracking-widest px-2 py-1.5 hover:text-slate-900"
+                                                    className="text-[#351e24]/40 text-[9px] font-bold uppercase tracking-widest px-2 py-2 hover:text-primary"
                                                 >
-                                                    Abort
+                                                    Cancel
                                                 </button>
                                             </div>
                                         ) : (
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button 
+                                            <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                                                <button
                                                     onClick={() => handleEdit(cat)}
-                                                    className="w-9 h-9 flex items-center justify-center hover:bg-slate-900 hover:text-white rounded-lg text-slate-400 transition-all border border-slate-100 shadow-sm"
+                                                    className="w-10 h-10 flex items-center justify-center bg-white hover:bg-[#351e24] border border-[#fde2e7] rounded-xl text-[#351e24]/40 hover:text-white transition-all shadow-sm"
                                                 >
                                                     <Edit className="w-4 h-4" />
                                                 </button>
-                                                <button 
-                                                    onClick={() => confirmDelete(cat.id)}
-                                                    className="w-9 h-9 flex items-center justify-center hover:bg-red-50 text-slate-400 hover:text-red-600 rounded-lg transition-all border border-slate-100 shadow-sm"
+                                                <button
+                                                    onClick={() => setDeleteId(cat.id)}
+                                                    className="w-10 h-10 flex items-center justify-center bg-white hover:bg-rose-50 border border-[#fde2e7] rounded-xl text-[#351e24]/40 hover:text-primary transition-all shadow-sm"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
@@ -189,8 +202,11 @@ const AdminCategories = () => {
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan="6" className="py-20 text-center text-slate-300 font-headline font-black uppercase italic text-2xl tracking-tighter">
-                                        No Sectors Defined In Current Grid
+                                    <td colSpan="5" className="py-40 text-center">
+                                        <div className="flex flex-col items-center justify-center opacity-20">
+                                            <LayoutGrid className="w-16 h-16 mb-4" />
+                                            <p className="text-xl font-bold uppercase tracking-widest italic text-[#351e24]">No categories found</p>
+                                        </div>
                                     </td>
                                 </tr>
                             )}
@@ -199,7 +215,7 @@ const AdminCategories = () => {
                 </div>
             </div>
 
-            <CategoryModal 
+            <CategoryModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 category={selectedCategory}
@@ -210,4 +226,3 @@ const AdminCategories = () => {
 };
 
 export default AdminCategories;
-

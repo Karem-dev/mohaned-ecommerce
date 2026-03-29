@@ -1,0 +1,27 @@
+# InfinityFree Deployment Instructions
+
+This `deploy` folder contains your project prepared for shared hosting.
+
+## Structure
+- `/htdocs/` -> Contains the static assets and the entry point for your application.
+- `/laravel/` -> Contains the core Laravel code.
+
+## Steps for Upload:
+1. Zip the **contents** of `htdocs` and upload them to the `htdocs` folder on your InfinityFree account (or the root folder of your domain).
+2. Zip the **contents** of `laravel` and upload them to a folder named `laravel` ONE LEVEL ABOVE `htdocs` (in your account's home directory).
+   - If you cannot upload above `htdocs`, put the `laravel` folder inside `htdocs` and update `index.php` manually.
+
+## Database & Environment:
+1. Open `.env` in the `laravel` folder.
+2. Fill in your database details provided by InfinityFree:
+   - `DB_HOST`: The MySQL hostname from InfinityFree.
+   - `DB_DATABASE`: The database name you created.
+   - `DB_USERNAME`: Your InfinityFree username.
+   - `DB_PASSWORD`: Your hosting account password.
+3. Import your local database SQL into InfinityFree via phpMyAdmin.
+
+## Optimization:
+- Run `php artisan config:cache` if you have terminal access (not usually available on InfinityFree).
+- Make sure `/laravel/storage` and `/laravel/bootstrap/cache` are writable (775 or similar).
+
+Congratulations! Your Rose Galerie is ready to shine on the web! ✨👠🚀

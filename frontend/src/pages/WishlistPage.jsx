@@ -1,23 +1,30 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
-    Heart, ShoppingBag, ArrowRight, Trash2, Search
+    Heart,
+    ShoppingBag,
+    Trash2,
+    Search,
+    History,
+    User,
+    Truck,
+    Settings,
+    LogOut,
+    ChevronRight,
+    Loader2
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { getWishlist, toggleWishlist } from '../services/wishlistService';
 import ProductCard from '../components/ui/ProductCard';
-
-// ── Bilingual Label ──────────────────────────────────────────────────────────
-const BiText = ({ en, ar, className = '' }) => (
-    <span className={className}>
-        {en} <span style={{ fontFamily: "'Cairo', sans-serif" }}>· {ar}</span>
-    </span>
-);
+import useAuthStore from '../store/authStore';
+import BiText from '../components/ui/BiText';
 
 const WishlistPage = () => {
+    const { user, logout } = useAuthStore();
     const queryClient = useQueryClient();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const { data: wishlistResp, isLoading } = useQuery({
         queryKey: ['wishlist'],
@@ -46,150 +53,78 @@ const WishlistPage = () => {
         onSettled: () => queryClient.invalidateQueries(['wishlist']),
     });
 
-    // ── Loading ──────────────────────────────────────────────────────────────
+    const handleLogout = () => {
+        logout();
+        navigate('/');
+    };
+
     if (isLoading) return (
-        <div className="pt-40 min-h-screen flex flex-col items-center justify-center gap-4">
-            <style>{`@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');`}</style>
-            <div className="w-12 h-12 border-4 border-slate-900 border-t-transparent rounded-full animate-spin" />
-            <p className="font-black text-slate-400 uppercase tracking-widest text-[10px]">
-                جاري التحميل · Loading Wishlist...
-            </p>
+        <div className="py-40 text-center bg-surface min-h-screen">
+            <div className="w-10 h-10 border-[3px] border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-8"></div>
+            <p className="font-bold text-on-surface-variant uppercase tracking-[0.2em] text-[10px]">Loading Wishlist...</p>
         </div>
     );
 
     return (
-        <>
-            <style>{`@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');`}</style>
-
-            <div className="min-h-screen bg-white pt-28 pb-20 px-6 lg:px-12">
-                <div className="max-w-7xl mx-auto space-y-12">
-
-                    {/* ── Header ──────────────────────────────────────── */}
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-slate-100">
-                        <div>
-                            <div className="flex items-baseline gap-3">
-                                <h1 className="text-5xl md:text-6xl font-black text-slate-950 tracking-tighter uppercase italic leading-none flex items-center gap-4">
-                                    Wishlist
-                                    <Heart className="w-10 h-10 text-rose-400 fill-rose-400 opacity-30" />
-                                </h1>
-                                <span className="text-3xl font-bold text-slate-300" style={{ fontFamily: "'Cairo', sans-serif" }}>
-                                    · المفضلة
-                                </span>
-                            </div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-3 italic">
-                                المنتجات المحفوظة · Your saved products
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-3 px-5 py-3 bg-slate-50 rounded-xl border border-slate-100 shadow-sm">
-                            <Heart className="w-4 h-4 text-rose-400 fill-rose-400" />
-                            <div>
-                                <p className="text-xl font-black text-slate-900 italic leading-none tabular-nums">{items.length}</p>
-                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
-                                    منتج محفوظ · Saved
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* ── Items Grid ──────────────────────────────────── */}
-                    {items.length > 0 ? (
-                        <>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                                {items.map((product) => (
-                                    <div key={product.id} className="group relative">
-                                        <ProductCard product={product} />
-
-                                        {/* Remove Button */}
-                                        <button
-                                            onClick={() => removeMutation.mutate(product.id)}
-                                            disabled={removeMutation.isPending}
-                                            className="absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-white/95 backdrop-blur-sm text-red-400 px-3 py-2 rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white text-[9px] font-black uppercase tracking-widest border border-red-100 hover:border-red-500"
-                                        >
-                                            <Trash2 className="w-3 h-3" />
-                                            <span>حذف · Remove</span>
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* ── CTA Banner ───────────────────────────── */}
-                            <div className="bg-slate-900 rounded-2xl overflow-hidden shadow-2xl mt-8">
-                                <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-0">
-
-                                    {/* Text Side */}
-                                    <div className="p-10 lg:p-14 space-y-6">
-                                        <div>
-                                            <div className="flex items-baseline gap-3 flex-wrap">
-                                                <h2 className="text-3xl font-black tracking-tighter uppercase italic text-white leading-tight">
-                                                    Ready to Order?
-                                                </h2>
-                                                <span className="text-xl font-bold text-slate-500" style={{ fontFamily: "'Cairo', sans-serif" }}>
-                                                    · جاهز للشراء؟
-                                                </span>
-                                            </div>
-                                            <p className="text-slate-500 text-sm mt-3 leading-relaxed">
-                                                Move your favorites to cart and complete your purchase.
-                                            </p>
-                                            <p className="text-slate-600 text-sm mt-1 font-medium" style={{ fontFamily: "'Cairo', sans-serif" }}>
-                                                أضف منتجاتك المفضلة للسلة وأكمل طلبك.
-                                            </p>
-                                        </div>
-                                        <div className="flex flex-wrap gap-3">
-                                            <button
-                                                onClick={() => navigate('/shop')}
-                                                className="flex items-center gap-2 bg-amber-400 text-slate-900 px-6 py-3 rounded-xl font-black uppercase tracking-widest text-xs hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-lg"
-                                            >
-                                                <ShoppingBag className="w-4 h-4" />
-                                                <span>تسوق الآن · Shop Now</span>
-                                            </button>
-                                            <button
-                                                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                                                className="flex items-center gap-2 bg-white/10 text-white border border-white/10 px-6 py-3 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-white/20 transition-all"
-                                            >
-                                                <ArrowRight className="w-4 h-4 -rotate-90" />
-                                                <span>للأعلى · Top</span>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Visual Side */}
-                                    <div className="hidden lg:grid grid-cols-3 gap-4 p-10 opacity-20">
-                                        {[1, 2, 3].map(i => (
-                                            <div key={i} className="aspect-[3/4] bg-white/5 rounded-xl border border-white/10" />
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </>
-                    ) : (
-                        /* ── Empty State ─────────────────────────────── */
-                        <div className="py-32 text-center space-y-8">
-                            <div className="w-24 h-24 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto border border-slate-100 shadow-sm">
-                                <Search className="w-10 h-10 text-slate-200" />
-                            </div>
-                            <div className="space-y-3">
-                                <h2 className="text-4xl font-black tracking-tighter uppercase italic text-slate-950">
-                                    No saved items.
-                                </h2>
-                                <p className="font-bold text-slate-400 text-base" style={{ fontFamily: "'Cairo', sans-serif" }}>
-                                    قائمة المفضلة فارغة حالياً
-                                </p>
-                                <p className="text-sm text-slate-400 uppercase tracking-widest font-bold italic max-w-sm mx-auto opacity-70">
-                                    Discover our latest collection and save your favorites.
-                                </p>
-                            </div>
-                            <Link to="/shop">
-                                <button className="mt-4 bg-slate-950 text-white px-10 py-4 rounded-xl font-black uppercase tracking-widest text-sm flex items-center gap-3 mx-auto hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-xl">
-                                    <span>استكشف المنتجات · Explore Catalog</span>
-                                    <ArrowRight className="w-4 h-4 text-amber-400" />
-                                </button>
-                            </Link>
-                        </div>
-                    )}
-
+        <main className="space-y-12 min-w-0">
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-10 border-b border-outline-variant/20">
+                <div>
+                    <h1 className="text-4xl font-bold text-on-surface uppercase tracking-tight font-headline italic">My Wishlist</h1>
+                    <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-widest mt-1 opacity-60">Review and manage items you've saved for later.</p>
                 </div>
-            </div>
-        </>
+                <div className="flex items-center gap-4 px-6 py-4 bg-white rounded-3xl border border-outline-variant/10 shadow-sm self-start">
+                    <Heart className="w-5 h-5 text-primary fill-primary/10" />
+                    <div className="flex flex-col">
+                        <p className="text-xl font-bold text-on-surface italic leading-none tabular-nums">{items.length}</p>
+                        <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-400 mt-1">Saved Items</p>
+                    </div>
+                </div>
+            </header>
+
+            {/* Items Grid */}
+            {items.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-8">
+                    {items.map((product) => (
+                        <div key={product.id} className="group relative bg-white rounded-[2.5rem] p-4 border border-outline-variant/10 transition-all hover:border-primary/30 hover:shadow-xl">
+                            <ProductCard product={product} />
+
+                            {/* Remove Action */}
+                            <button
+                                onClick={() => removeMutation.mutate(product.id)}
+                                disabled={removeMutation.isPending}
+                                className="absolute top-8 right-8 z-20 flex items-center gap-2 bg-white/90 backdrop-blur-md text-primary px-5 py-2.5 rounded-2xl shadow-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-primary hover:text-white border border-outline-variant/10"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                <span className="text-[9px] font-bold uppercase tracking-widest italic">Remove</span>
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="py-32 text-center bg-white border border-dashed border-outline-variant/40 rounded-[3rem]">
+                    <Heart className="w-12 h-12 text-on-surface-variant/10 mx-auto mb-4" />
+                    <p className="text-sm font-bold text-on-surface-variant uppercase tracking-widest italic opacity-60">Your wishlist is empty</p>
+                    <Link to="/products" className="mt-8 inline-block px-10 py-4 bg-primary text-white rounded-full font-bold text-[10px] uppercase tracking-widest hover:scale-105 transition-all italic shadow-lg shadow-primary/20">Start Exploring</Link>
+                </div>
+            )}
+
+            {/* Engagement Module */}
+            {items.length > 0 && (
+                <div className="mt-20 bg-on-surface p-12 rounded-[3.5rem] text-white flex flex-col md:flex-row items-center justify-between gap-12 relative overflow-hidden group shadow-2xl shadow-on-surface/20">
+                    <ShoppingBag className="absolute -bottom-10 -right-10 w-48 h-48 text-primary opacity-10 group-hover:scale-110 transition-transform duration-1000" />
+                    <div className="relative z-10 space-y-6">
+                        <h2 className="text-4xl font-bold tracking-tighter uppercase italic leading-none font-headline">Ready to Buy?</h2>
+                        <p className="text-white/40 text-[11px] font-bold uppercase tracking-wide max-w-sm leading-relaxed italic">Transform your favorite items into confirmed orders. Move your saved pieces to the checkout today.</p>
+                        <button
+                            onClick={() => navigate('/products')}
+                            className="px-10 py-4 bg-primary text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:scale-105 transition-all shadow-xl shadow-primary/20 italic"
+                        >
+                            Continue Shopping
+                        </button>
+                    </div>
+                </div>
+            )}
+        </main>
     );
 };
 

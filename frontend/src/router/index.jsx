@@ -4,6 +4,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 // Layouts
 import MainLayout from '../layouts/MainLayout';
 import AdminLayout from '../layouts/AdminLayout';
+import ProfileLayout from '../layouts/ProfileLayout';
 
 // Customer Pages
 import HomePage from '../pages/HomePage';
@@ -21,25 +22,22 @@ import ProfilePage from '../pages/ProfilePage';
 import WishlistPage from '../pages/WishlistPage';
 import SearchPage from '../pages/SearchPage';
 import VerifyOTPPage from '../pages/VerifyOTPPage';
+import OrderTrackingPage from '../pages/OrderTrackingPage';
+import OrderDetailsPage from '../pages/OrderDetailsPage';
 
 // Admin Pages
 import AdminDashboard from '../pages/AdminDashboard';
 import AdminProducts from '../pages/AdminProducts';
-import ProductFormPage from '../pages/ProductFormPage';
 import AdminCategories from '../pages/AdminCategories';
 import AdminOrders from '../pages/AdminOrders';
 import AdminOrderDetail from '../pages/AdminOrderDetail';
 import AdminUsers from '../pages/AdminUsers';
 import AdminCoupons from '../pages/AdminCoupons';
 import AdminSettings from '../pages/AdminSettings';
-
-import OrderDetailsPage from '../pages/OrderDetailsPage';
+import AdminInventory from '../pages/AdminInventory';
 
 // Auth State
 import useAuthStore from '../store/authStore';
-// ... existing imports ...
-// Wait, I should add it properly in the list.
-// I'll rewrite the children part.
 
 const ProtectedRoute = ({ children }) => {
   const token = useAuthStore(state => state.token);
@@ -69,16 +67,26 @@ export const router = createBrowserRouter([
       { path: 'categories', element: <CategoriesPage /> },
       { path: 'products/:slug', element: <ProductDetailPage /> },
       { path: 'cart', element: <ProtectedRoute><CartPage /></ProtectedRoute> },
-      { path: 'wishlist', element: <ProtectedRoute><WishlistPage /></ProtectedRoute> },
-      { path: 'profile/*', element: <ProtectedRoute><ProfilePage /></ProtectedRoute> },
-      { path: 'orders', element: <ProtectedRoute><OrdersPage /></ProtectedRoute> },
-      { path: 'orders/:orderNumber', element: <ProtectedRoute><OrderDetailsPage /></ProtectedRoute> },
+      
+      // Nested Profile Section
+      {
+        path: 'profile',
+        element: <ProtectedRoute><ProfileLayout /></ProtectedRoute>,
+        children: [
+            { index: true, element: <ProfilePage /> },
+            { path: 'orders', element: <OrdersPage /> },
+            { path: 'orders/:orderNumber', element: <OrderDetailsPage /> },
+            { path: 'orders/:orderNumber/track', element: <OrderTrackingPage /> },
+            { path: 'wishlist', element: <WishlistPage /> },
+        ]
+      },
+      
     ]
   },
   { path: '/login', element: <AuthRoute><LoginPage /></AuthRoute> },
   { path: '/register', element: <AuthRoute><RegisterPage /></AuthRoute> },
   { path: '/forgot-password', element: <AuthRoute><ForgotPasswordPage /></AuthRoute> },
-  { path: '/verify-otp', element: <AuthRoute><VerifyOTPPage /></AuthRoute> },
+  { path: '/verify-otp', element: <VerifyOTPPage /> },
   { path: '/checkout', element: <ProtectedRoute><CheckoutPage /></ProtectedRoute> },
   
   // Admin Panel
@@ -88,13 +96,12 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <AdminDashboard /> },
       { path: 'products', element: <AdminProducts /> },
-      { path: 'products/new', element: <ProductFormPage /> },
-      { path: 'products/:id/edit', element: <ProductFormPage /> },
       { path: 'categories', element: <AdminCategories /> },
       { path: 'orders', element: <AdminOrders /> },
       { path: 'orders/:id', element: <AdminOrderDetail /> },
       { path: 'customers', element: <AdminUsers /> },
       { path: 'coupons', element: <AdminCoupons /> },
+      { path: 'inventory', element: <AdminInventory /> },
       { path: 'settings', element: <AdminSettings /> },
     ]
   },

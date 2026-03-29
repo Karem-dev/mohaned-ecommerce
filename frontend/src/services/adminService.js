@@ -83,10 +83,8 @@ export const updateAdminOrderStatus = async ({ id, status }) => {
     return data;
 };
 
-export const addOrderTracking = async (id, trackingNumber) => {
-    const { data } = await axiosInstance.post(`/admin/orders/${id}/tracking`, {
-        tracking_number: trackingNumber
-    });
+export const addOrderTracking = async (id, trackingData) => {
+    const { data } = await axiosInstance.post(`/admin/orders/${id}/tracking`, trackingData);
     return data;
 };
 
@@ -127,7 +125,7 @@ export const createAdminCoupon = async (couponData) => {
 };
 
 export const updateAdminCoupon = async ({ id, couponData }) => {
-    const { data } = await axiosInstance.put(`/admin/coupons/${id}`, couponData);
+    const { data } = await axiosInstance.patch(`/admin/coupons/${id}`, couponData);
     return data;
 };
 

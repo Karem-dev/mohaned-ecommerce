@@ -1,180 +1,211 @@
 import React, { memo, useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingBag, User, LogOut, Heart, Shield, Package, Menu, X, ArrowRight } from 'lucide-react';
+import { 
+    ShoppingBag, 
+    User, 
+    Heart, 
+    Shield, 
+    Menu, 
+    X, 
+    ArrowRight, 
+    Search, 
+    LayoutDashboard,
+    LogOut,
+    Package
+} from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import useAuthStore from '../../store/authStore';
 import { getCart } from '../../services/cartService';
 
 const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const user = useAuthStore((state) => state.user);
-  const location = useLocation();
-  
-  const { data: cartResp } = useQuery({
-    queryKey: ['cart'],
-    queryFn: getCart,
-    enabled: !!user
-  });
+    const [isOpen, setIsOpen] = useState(false);
+    const user = useAuthStore((state) => state.user);
+    const logout = useAuthStore((state) => state.logout);
+    const location = useLocation();
 
-  const cartCount = cartResp?.items?.length || 0;
+    const { data: cartResp } = useQuery({
+        queryKey: ['cart'],
+        queryFn: getCart,
+        enabled: !!user
+    });
 
-  // Close menu on route change
-  useEffect(() => {
-    setIsOpen(false);
-  }, [location]);
+    const cartCount = cartResp?.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
 
-  // Disable scroll when menu is open
-  useEffect(() => {
-    if (isOpen) document.body.style.overflow = 'hidden';
-    else document.body.style.overflow = 'unset';
-  }, [isOpen]);
+    // Close menu on route change
+    useEffect(() => {
+        setIsOpen(false);
+    }, [location]);
 
-  const navLinks = [
-    { name: 'HOME', path: '/' },
-    { name: 'SHOP', path: '/shop' },
-    { name: 'CATEGORIES', path: '/categories' },
-  ];
+    // Disable scroll when menu is open
+    useEffect(() => {
+        if (isOpen) document.body.style.overflow = 'hidden';
+        else document.body.style.overflow = 'unset';
+    }, [isOpen]);
 
-  return (
-    <nav className="fixed top-0 left-0 w-full z-[100] bg-white transition-all duration-500 border-b border-slate-50">
-      <div className="max-w-[1440px] mx-auto px-6 h-20 md:h-24 flex items-center justify-between font-manrope">
-        
-        {/* Mobile Menu Toggle */}
-        <button onClick={() => setIsOpen(true)} className="lg:hidden p-2 -ml-2 text-slate-900">
-          <Menu className="w-6 h-6" />
-        </button>
+    const navLinks = [
+        { name: 'Home', path: '/' },
+        { name: 'Shop', path: '/shop' },
+        { name: 'Categories', path: '/categories' },
+    ];
 
-        {/* Logo */}
-        <Link to="/" className="text-2xl font-black tracking-tighter uppercase text-slate-950 select-none italic">
-          MOHANED
-        </Link>
+    return (
+        <nav className="fixed top-0 w-full z-[100] bg-white border-b border-outline-variant/10 shadow-sm transition-all duration-500">
+            <div className="max-w-7xl mx-auto px-6 h-20 md:h-24 flex items-center justify-between font-body antialiased">
+                
+                {/* Brand & Desktop Links */}
+                <div className="flex items-center gap-10">
+                    <Link to="/" className="text-2xl font-bold tracking-tighter text-on-surface uppercase font-headline italic leading-none group">
+                        Rose <span className="text-primary group-hover:italic transition-all">Store</span>
+                    </Link>
 
-        {/* Desktop Links */}
-        <div className="hidden lg:flex items-center gap-12 absolute left-1/2 -translate-x-1/2">
-          {navLinks.map((link) => (
-            <Link 
-              key={link.path}
-              to={link.path} 
-              className={`text-[11px] font-black tracking-[0.2em] uppercase transition-all hover:text-slate-900 ${
-                location.pathname === link.path ? 'text-slate-950' : 'text-slate-400'
-              }`}
-            >
-              {link.name}
-            </Link>
-          ))}
-        </div>
-
-        {/* Action Icons */}
-        <div className="flex items-center gap-4 md:gap-7">
-          <Link to="/wishlist" className="hidden md:block text-slate-400 hover:text-slate-950 transition-colors">
-            <Heart className="w-5 h-5" />
-          </Link>
-
-          <Link to="/cart" className="text-slate-400 hover:text-slate-950 transition-colors relative group">
-            <ShoppingBag className="w-5 h-5 md:w-6 md:h-6 group-hover:scale-110 transition-transform" />
-            {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-slate-900 text-[8px] font-black text-white rounded-full flex items-center justify-center animate-bounce">
-                {cartCount}
-              </span>
-            )}
-          </Link>
-
-          <div className="hidden md:block h-6 w-[1px] bg-slate-100" />
-
-          {user ? (
-            <div className="flex items-center gap-6">
-               {user.role === 'admin' && (
-                <Link to="/admin" className="hidden lg:flex items-center gap-2 group transition-all">
-                  <Shield className="w-5 h-5 text-slate-400 group-hover:text-slate-900 transition-colors" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-900 transition-all">Staff</span>
-                </Link>
-              )}
-              <Link to="/profile" className="flex items-center gap-2 group transition-all">
-                <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 group-hover:border-slate-900 transition-all overflow-hidden shadow-inner">
-                  {user.avatar ? (
-                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <User className="w-4 h-4 text-slate-400" />
-                  )}
+                    <div className="hidden lg:flex items-center gap-8">
+                        {navLinks.map((link) => (
+                            <Link
+                                key={link.path}
+                                to={link.path}
+                                className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-all hover:text-primary ${location.pathname === link.path ? 'text-primary' : 'text-on-surface-variant'}`}
+                            >
+                                {link.name}
+                            </Link>
+                        ))}
+                    </div>
                 </div>
-              </Link>
-            </div>
-          ) : (
-            <Link to="/login" className="flex items-center gap-2 group transition-all">
-              <User className="w-5 h-5 md:w-6 md:h-6 text-slate-400 group-hover:text-slate-900 transition-colors" />
-              <span className="hidden lg:block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-slate-950">ID</span>
-            </Link>
-          )}
-        </div>
-      </div>
 
-      {/* Mobile Sidebar Overlay */}
-      <div className={`fixed inset-0 z-[200] lg:hidden transition-all duration-500 ${isOpen ? 'visible' : 'invisible'}`}>
-        {/* Backdrop */}
-        <div 
-          className={`absolute inset-0 bg-slate-950/20 backdrop-blur-md transition-opacity duration-500 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
-          onClick={() => setIsOpen(false)}
-        />
-        
-        {/* Drawer */}
-        <div className={`absolute left-0 top-0 h-full w-[85%] max-w-sm bg-white shadow-2xl transition-transform duration-500 ease-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-          <div className="p-8 h-full flex flex-col">
-            <div className="flex justify-between items-center mb-16">
-              <span className="text-xl font-black italic">MENU</span>
-              <button onClick={() => setIsOpen(false)} className="p-2 -mr-2 text-slate-900 bg-slate-50 rounded-lg">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+                {/* Global Actions */}
+                <div className="flex items-center gap-4 md:gap-6">
+                    
+                    {/* Search Focus */}
+                    <Link to="/search" className="p-3 text-on-surface-variant/40 hover:text-primary transition-colors hidden sm:block">
+                        <Search className="w-5 h-5" />
+                    </Link>
 
-            <div className="flex-1 space-y-8">
-              {navLinks.map((link) => (
-                <Link 
-                  key={link.path}
-                  to={link.path}
-                  className="block group"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className={`text-4xl font-black italic tracking-tighter ${location.pathname === link.path ? 'text-slate-950' : 'text-slate-300 group-hover:text-slate-950'} transition-colors`}>
-                      {link.name}
-                    </span>
-                    <ArrowRight className={`w-6 h-6 ${location.pathname === link.path ? 'text-slate-950' : 'text-slate-100 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0'} transition-all`} />
-                  </div>
-                </Link>
-              ))}
-            </div>
+                    <div className="flex items-center gap-1 md:gap-3">
+                        <Link to="/profile/wishlist" className="p-3 text-on-surface-variant/40 hover:text-primary transition-colors hover:bg-surface-container-low rounded-full">
+                            <Heart className="w-5 h-5" />
+                        </Link>
 
-            <div className="pt-8 border-t border-slate-50 space-y-6">
-              {user?.role === 'admin' && (
-                <Link to="/admin" className="flex items-center gap-4 group">
-                  <div className="w-12 h-12 rounded-xl bg-amber-400 flex items-center justify-center">
-                    <Shield className="w-6 h-6 text-slate-950" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Management</p>
-                    <p className="font-black text-slate-900 uppercase italic">Admin Panel</p>
-                  </div>
-                </Link>
-              )}
-              
-              <Link to="/profile" className="flex items-center gap-4 group">
-                <div className="w-12 h-12 rounded-xl bg-slate-950 flex items-center justify-center overflow-hidden">
-                  {user?.avatar ? (
-                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <User className="w-6 h-6 text-white" />
-                  )}
+                        <Link to="/cart" className="relative p-3 text-on-surface-variant/40 hover:text-primary transition-colors hover:bg-surface-container-low rounded-full shrink-0">
+                            <ShoppingBag className="w-5 h-5" />
+                            {cartCount > 0 && (
+                                <span className="absolute top-1 right-1 bg-primary text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold shadow-lg shadow-primary/20">
+                                    {cartCount}
+                                </span>
+                            )}
+                        </Link>
+                    </div>
+
+                    <div className="h-6 w-px bg-outline-variant/10 hidden md:block" />
+
+                    {/* Desktop User Hub */}
+                    <div className="hidden lg:flex items-center gap-4">
+                        {user ? (
+                            <div className="flex items-center gap-4">
+                                {user.role === 'admin' && (
+                                    <Link to="/admin" className="p-3 text-on-surface-variant/40 hover:text-primary transition-colors">
+                                        <Shield className="w-5 h-5" />
+                                    </Link>
+                                )}
+                                <Link to="/profile" className="flex items-center gap-3 group">
+                                    <div className="w-10 h-10 rounded-full overflow-hidden border border-outline-variant/20 group-hover:border-primary/40 transition-all">
+                                        <img
+                                            src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`}
+                                            className="w-full h-full object-cover"
+                                            alt={user.name}
+                                        />
+                                    </div>
+                                    <div className="flex flex-col text-left">
+                                        <span className="text-[10px] font-bold text-on-surface leading-tight uppercase tracking-tight">{user.name.split(' ')[0]}</span>
+                                        <span className="text-[8px] font-bold text-primary uppercase tracking-widest italic opacity-60">Verified</span>
+                                    </div>
+                                </Link>
+                            </div>
+                        ) : (
+                            <Link to="/login" className="px-6 py-2.5 bg-on-surface text-white rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary transition-all shadow-xl shadow-on-surface/10">
+                                Sign In
+                            </Link>
+                        )}
+                    </div>
+
+                    {/* Mobile Toggle */}
+                    <button onClick={() => setIsOpen(true)} className="lg:hidden p-3 bg-surface-container-low rounded-2xl text-primary shadow-sm hover:scale-110 active:scale-95 transition-all">
+                        <Menu className="w-6 h-6" />
+                    </button>
                 </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">My Identity</p>
-                  <p className="font-black text-slate-900 uppercase italic">{user ? user.name : 'Sign In'}</p>
-                </div>
-              </Link>
             </div>
-          </div>
-        </div>
-      </div>
-    </nav>
-  );
+
+            {/* Mobile Professional Drawer */}
+            <div className={`fixed inset-0 z-[201] lg:hidden transition-all duration-500 overflow-hidden ${isOpen ? 'visible' : 'invisible'}`}>
+                {/* Backdrop Layer */}
+                <div
+                    className={`absolute inset-0 bg-on-surface/80 backdrop-blur-xl transition-opacity duration-500 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+                    onClick={() => setIsOpen(false)}
+                />
+
+                {/* Drawer Menu */}
+                <div className={`absolute right-0 top-0 h-full w-full max-w-sm bg-white shadow-3xl transition-transform duration-500 ease-out border-l border-outline-variant/20 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                    <div className="p-8 h-full flex flex-col pt-12">
+                        
+                        <div className="flex justify-between items-center mb-16">
+                             <Link to="/" className="text-xl font-bold tracking-tighter text-on-surface uppercase font-headline italic">
+                                Rose <span className="text-primary">Store</span>
+                             </Link>
+                             <button onClick={() => setIsOpen(false)} className="p-3 bg-surface-container-low text-primary rounded-2xl shadow-sm">
+                                <X className="w-6 h-6" />
+                             </button>
+                        </div>
+
+                        {/* Mobile Navigation Hub */}
+                        <div className="flex-1 space-y-2">
+                             <p className="text-[8px] font-bold text-on-surface-variant/40 uppercase tracking-[0.3em] mb-6 italic">Store Navigation</p>
+                             {navLinks.map((link) => (
+                                <Link 
+                                    key={link.path} 
+                                    to={link.path} 
+                                    className={`flex items-center justify-between p-6 rounded-3xl border transition-all ${location.pathname === link.path ? 'bg-primary border-primary text-white shadow-xl shadow-primary/20' : 'bg-white border-outline-variant/10 text-on-surface hover:border-primary/20'}`}
+                                >
+                                    <span className="text-2xl font-bold tracking-tight uppercase font-headline italic">{link.name}</span>
+                                    <ArrowRight className="w-5 h-5 opacity-40" />
+                                </Link>
+                             ))}
+                        </div>
+
+                        {/* Mobile Account Hub */}
+                        <div className="mt-auto pt-8 border-t border-outline-variant/10 space-y-4">
+                             {user ? (
+                                <div className="space-y-4">
+                                     <Link to="/profile" className="flex items-center gap-4 p-4 bg-surface-container-low rounded-3xl border border-outline-variant/5">
+                                         <div className="w-12 h-12 rounded-full overflow-hidden border border-primary/20 bg-white">
+                                             <img
+                                                 src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`}
+                                                 className="w-full h-full object-cover"
+                                                 alt={user.name}
+                                             />
+                                         </div>
+                                         <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-bold text-on-surface truncate">{user.name}</p>
+                                            <p className="text-[9px] font-bold text-primary uppercase tracking-widest italic opacity-60">Control Panel</p>
+                                         </div>
+                                         <LayoutDashboard className="w-5 h-5 text-on-surface-variant/30" />
+                                     </Link>
+                                     <button 
+                                        onClick={() => { logout(); setIsOpen(false); }} 
+                                        className="w-full py-5 rounded-3xl border border-outline-variant/20 flex items-center justify-center gap-3 text-on-surface-variant hover:text-primary transition-all font-bold text-[10px] uppercase tracking-widest italic"
+                                     >
+                                         <LogOut className="w-4 h-4" /> Terminate Session
+                                     </button>
+                                </div>
+                             ) : (
+                                <Link to="/login" className="w-full py-6 bg-primary text-white rounded-3xl flex items-center justify-center gap-4 font-bold uppercase text-[11px] tracking-widest shadow-2xl shadow-primary/25">
+                                    Access Identity Registry <ArrowRight className="w-4 h-4" />
+                                </Link>
+                             )}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </nav>
+    );
 };
 
 export default memo(Navbar);

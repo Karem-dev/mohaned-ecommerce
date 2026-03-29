@@ -36,91 +36,53 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-slate-950 text-white pt-24 pb-12 overflow-hidden relative">
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 relative z-10">
-
-        {/* Brand & Newsletter */}
-        <div className="space-y-8">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center p-2 text-slate-900 shadow-2xl">
-            </div>
-            <span className="text-3xl font-black tracking-tighter uppercase italic">Mohaned store</span>
-          </Link>
-          <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-sm">
-            Elevating your shopping experience with premium curated collections and seamless service. Welcome to the gravity-defying marketplace.
+    <footer className="w-full rounded-t-[2rem] mt-20 bg-surface-container-low font-body">
+      <div className="flex flex-col md:flex-row justify-between items-start px-8 md:px-12 py-16 gap-12 w-full max-w-7xl mx-auto">
+        <div className="max-w-xs">
+          <Link to="/" className="text-xl font-bold text-primary mb-6 block">Rose Store</Link>
+          <p className="text-sm text-on-surface-variant mb-8 leading-relaxed">
+            Defining digital luxury through curated vision and editorial excellence. Your destination for high-end aesthetics.
           </p>
-          <div className="pt-4 flex gap-4">
-            {[Instagram, Twitter, Facebook, Youtube].map((Icon, i) => (
-              <a
-                key={i}
-                href="#"
-                className="w-10 h-10 border border-slate-800 rounded-full flex items-center justify-center text-slate-500 hover:text-white hover:border-white transition-all transform hover:-translate-y-1"
-              >
-                <Icon className="w-5 h-5" />
+          <div className="flex gap-4">
+            {['alternate_email', 'share', 'chat'].map(icon => (
+              <a key={icon} className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary transition-all group" href="#">
+                <span className="material-symbols-outlined text-primary group-hover:text-white text-sm">{icon}</span>
               </a>
             ))}
           </div>
         </div>
-
-        {/* Links */}
-        {footerLinks.map((section) => (
-          <div key={section.title} className="space-y-6">
-            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{section.title}</h4>
+        <div className="grid grid-cols-2 gap-x-12 gap-y-8">
+          <div>
+            <h4 className="text-primary font-bold text-sm uppercase tracking-widest mb-6">Explore</h4>
             <ul className="space-y-4">
-              {section.links.map((link) => (
-                <li key={link.name}>
-                  <Link to={link.href} className="text-sm font-bold text-slate-400 hover:text-white transition-colors">
-                    {link.name}
-                  </Link>
-                </li>
+              {['Shop All', 'Trending', 'New Arrivals', 'About Us'].map(l => (
+                <li key={l}><a className="text-sm text-on-surface-variant hover:text-primary hover:underline transition-all" href="#">{l}</a></li>
               ))}
             </ul>
           </div>
-        ))}
-
-        {/* Contact Info */}
-        <div className="space-y-6 lg:ml-auto">
-          <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Contact Us</h4>
-          <ul className="space-y-4">
-            <li className="flex items-start gap-3 group">
-              <Mail className="w-5 h-5 text-slate-600 mt-1" />
-              <div>
-                <span className="block text-xs font-black uppercase text-slate-600 mb-1">Email</span>
-                <a href="mailto:[EMAIL_ADDRESS]" className="text-sm font-bold text-slate-300 hover:text-white transition-colors">[EMAIL_ADDRESS]</a>
-              </div>
-            </li>
-            <li className="flex items-start gap-4">
-              <Phone className="w-5 h-5 text-slate-600 mt-1" />
-              <div>
-                <span className="block text-xs font-black uppercase text-slate-600 mb-1">Phone</span>
-                <span className="text-sm font-bold text-slate-300">+2 010 224 99 888</span>
-              </div>
-            </li>
-            <li className="flex items-start gap-4">
-              <MapPin className="w-5 h-5 text-slate-600 mt-1" />
-              <div>
-                <span className="block text-xs font-black uppercase text-slate-600 mb-1">Address</span>
-                <span className="text-sm font-bold text-slate-300">Egypt - Alexandria</span>
-              </div>
-            </li>
-          </ul>
+          <div>
+            <h4 className="text-primary font-bold text-sm uppercase tracking-widest mb-6">Service</h4>
+            <ul className="space-y-4">
+              {['Privacy Policy', 'Terms of Service', 'Shipping & Returns', 'Contact Us'].map(l => (
+                <li key={l}><a className="text-sm text-on-surface-variant hover:text-primary hover:underline transition-all" href="#">{l}</a></li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <div className="w-full md:w-80">
+          <h4 className="text-primary font-bold text-sm uppercase tracking-widest mb-6">Editorial Insights</h4>
+          <p className="text-xs text-on-surface-variant mb-6 leading-relaxed">Subscribe to our weekly editorial newsletter for trends, early access, and curated luxury news.</p>
+          <div className="relative">
+            <input className="w-full bg-white border border-outline-variant/30 rounded-full py-4 pl-6 pr-12 text-sm focus:ring-2 focus:ring-primary outline-none" placeholder="email@address.com" type="email" />
+            <button className="absolute right-2 top-2 w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center hover:bg-secondary transition-all">
+              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          </div>
         </div>
       </div>
-
-      <div className="max-w-7xl mx-auto px-6 mt-24 pt-8 border-t border-slate-900 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
-        <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.3em]">
-          &copy; {years} Mohaned store Marketplace Inc. All Rights Reserved.
-        </p>
-        <div className="flex items-center gap-6 grayscale opacity-30 hover:grayscale-0 hover:opacity-100 transition-all cursor-pointer">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" className="h-4" alt="PayPal" />
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/MasterCard_Logo.svg/1024px-MasterCard_Logo.svg.png" className="h-5" alt="MasterCard" />
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/1024px-Visa_Inc._logo.svg.png" className="h-3" alt="Visa" />
-        </div>
+      <div className="border-t border-primary/5 py-8 px-12 text-center">
+        <p className="text-xs text-on-surface-variant opacity-90">© 2026 Radiant Editorial. All rights reserved.</p>
       </div>
-
-      {/* Background Micro-Decoration */}
-      <div className="absolute -bottom-1/4 -right-1/4 w-[600px] h-[600px] bg-slate-800 rounded-full blur-[200px] opacity-20 pointer-events-none" />
-      <div className="absolute -top-1/4 -left-1/4 w-[400px] h-[400px] bg-slate-900 rounded-full blur-[150px] opacity-10 pointer-events-none" />
     </footer>
   );
 };
