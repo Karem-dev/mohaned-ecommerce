@@ -49,19 +49,16 @@ jobs:
           cp -r backend/* temp_backend/
           rm -rf temp_backend/node_modules temp_backend/.env
           
-          # 2. Add Built Frontend to Backend Public
-          mkdir -p temp_backend/public/build
-          cp -r frontend/dist/* temp_backend/public/build/
-          
-          # 3. Move EVERYTHING into htdocs for root serving
-          # (Shared hosting standard where htdocs is the root)
+          # 2. Add Built Frontend (ALREADY IN PUBLIC/BUILD DUE TO VITE CONFIG)
+          # So we just move everything into htdocs for root serving
           cp -r temp_backend/* htdocs/
           
-          # 4. Move public contents to htdocs root
+          # 3. Move public contents (including the build) to htdocs root
+          # This ensures index.php and the build/ folder are reachable directly.
           cp -r temp_backend/public/* htdocs/
           rm -rf htdocs/public
           
-          # 5. Adjust index.php for same-folder vendor/bootstrap (since everything is in root)
+          # 4. Adjust index.php for same-folder vendor/bootstrap (since everything is in root)
           sed -i "s|require __DIR__.'/../vendor/autoload.php'|require __DIR__.'/vendor/autoload.php'|g" htdocs/index.php
           sed -i "s|require_once __DIR__.'/../bootstrap/app.php'|require_once __DIR__.'/bootstrap/app.php'|g" htdocs/index.php
           sed -i "s|__DIR__.'/../storage/framework/maintenance.php'|__DIR__.'/storage/framework/maintenance.php'|g" htdocs/index.php
