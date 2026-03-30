@@ -2,15 +2,11 @@
     RewriteEngine On
     RewriteBase /
 
-    # 1. Map /storage URL to the actual physical path in Laravel's deep directory
-    RewriteRule ^storage/(.*)$ storage/app/public/$1 [L]
-
-    # 2. Map existing public assets (CSS, JS, etc.)
+    # 1. Map existing public assets (CSS, JS, and now Storage which we copied there)
     RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
     RewriteRule ^(.+)$ public/$1 [L]
 
-    # 3. Handle everything else via Laravel's index.php (ALLOWING DIRECTORIES FOR THE ROOT URL)
-    # We remove the !-d check so that the root URL '/' is rewritten to index.php instead of 403 Forbidden.
+    # 2. Handle everything else via Laravel's index.php
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ public/index.php [L]
 </IfModule>

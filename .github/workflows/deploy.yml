@@ -82,7 +82,11 @@ jobs:
           # 2. Copy root .htaccess (routes everything through public/)
           cp htaccess-root htdocs/.htaccess
 
-          # 3. Patch manifest key to match blade @vite call
+          # 3. Handle storage correctly for shared hosting
+          mkdir -p htdocs/public/storage
+          cp -r backend/storage/app/public/* htdocs/public/storage/ || true
+
+          # 4. Patch manifest key to match blade @vite call
           MANIFEST=""
           if [ -f "htdocs/public/build/.vite/manifest.json" ]; then
             MANIFEST="htdocs/public/build/.vite/manifest.json"
