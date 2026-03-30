@@ -39,50 +39,31 @@ jobs:
         working-directory: ./backend
         run: composer install --no-dev --optimize-autoloader
 
-      # Generate .env file from GitHub Secrets
+      # Generate .env file from GitHub Secrets (Robust method)
       - name: Generate .env file
         run: |
-          cat > backend/.env << 'ENVEOF'
-          APP_NAME=RosaStore
-          APP_ENV=production
-          APP_KEY=${{ secrets.APP_KEY }}
-          APP_DEBUG=false
-          APP_URL=https://rosastore.xo.je
-
-          LOG_CHANNEL=stack
-          LOG_LEVEL=error
-
-          DB_CONNECTION=mysql
-          DB_HOST=${{ secrets.DB_HOST }}
-          DB_PORT=3306
-          DB_DATABASE=${{ secrets.DB_DATABASE }}
-          DB_USERNAME=${{ secrets.DB_USERNAME }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-
-          SESSION_DRIVER=file
-          SESSION_LIFETIME=120
-          SESSION_ENCRYPT=false
-          SESSION_PATH=/
-          SESSION_DOMAIN=null
-
-          BROADCAST_CONNECTION=log
-          FILESYSTEM_DISK=local
-          QUEUE_CONNECTION=sync
-          CACHE_STORE=file
-
-          MAIL_MAILER=${{ secrets.MAIL_MAILER }}
-          MAIL_HOST=${{ secrets.MAIL_HOST }}
-          MAIL_PORT=${{ secrets.MAIL_PORT }}
-          MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
-          MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
-          MAIL_ENCRYPTION=ssl
-          MAIL_FROM_ADDRESS=${{ secrets.MAIL_FROM_ADDRESS }}
-          MAIL_FROM_NAME="Rosa Store"
-
-          VITE_APP_NAME="Rosa Store"
-          ENVEOF
-          # Remove leading spaces from heredoc
-          sed -i 's/^          //' backend/.env
+          printf "APP_NAME=RosaStore\n\
+          APP_ENV=production\n\
+          APP_KEY=${{ secrets.APP_KEY }}\n\
+          APP_DEBUG=false\n\
+          APP_URL=https://rosastore.xo.je\n\
+          VITE_API_URL=https://rosastore.xo.je/api\n\
+          DB_CONNECTION=mysql\n\
+          DB_HOST=${{ secrets.DB_HOST }}\n\
+          DB_PORT=3306\n\
+          DB_DATABASE=${{ secrets.DB_DATABASE }}\n\
+          DB_USERNAME=${{ secrets.DB_USERNAME }}\n\
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}\n\
+          FILESYSTEM_DISK=public\n\
+          MAIL_MAILER=${{ secrets.MAIL_MAILER }}\n\
+          MAIL_HOST=${{ secrets.MAIL_HOST }}\n\
+          MAIL_PORT=${{ secrets.MAIL_PORT }}\n\
+          MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}\n\
+          MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}\n\
+          MAIL_ENCRYPTION=ssl\n\
+          MAIL_FROM_ADDRESS=${{ secrets.MAIL_FROM_ADDRESS }}\n\
+          MAIL_FROM_NAME=\"Rosa Store\"\n\
+          VITE_APP_NAME=\"Rosa Store\"" | sed 's/^[[:space:]]*//' > backend/.env
 
       # Prepare Deployment Directory (SIMPLE - no flattening)
       - name: Prepare Deployment Directory

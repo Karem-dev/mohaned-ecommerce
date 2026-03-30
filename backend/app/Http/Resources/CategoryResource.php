@@ -20,7 +20,7 @@ class CategoryResource extends JsonResource
             'slug' => $this->slug,
             'description' => $this->description,
             'image' => $this->image,
-            'image_url' => $this->image ? (str_starts_with($this->image, 'http') ? $this->image : asset('storage/' . ltrim($this->image, '/'))) : null,
+            'image_url' => $this->image ? (str_contains($this->image, 'localhost:8000/storage/') ? asset(str_replace('http://localhost:8000/storage/', 'storage/', $this->image)) : (str_starts_with($this->image, 'http') ? $this->image : asset('storage/' . ltrim($this->image, '/')))) : null,
             'parent_id' => $this->parent_id,
             'products_count' => $this->products_count,
             'is_active' => $this->is_active,
