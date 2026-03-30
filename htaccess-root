@@ -2,7 +2,7 @@
     RewriteEngine On
     RewriteBase /
 
-    # Check if the file is in storage - bridge for shared hosting
+    # Bridge for storage on shared hosting
     RewriteRule ^storage/(.*)$ storage/app/public/$1 [L]
 
     # If the file exists in public/, serve it directly
