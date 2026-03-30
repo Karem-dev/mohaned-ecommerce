@@ -11,7 +11,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Force public path for InfinityFree (htdocs is root)
+        $this->app->bind('path.public', function() {
+            return base_path();
+        });
     }
 
     /**
