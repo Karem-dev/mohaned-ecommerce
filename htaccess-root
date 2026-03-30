@@ -1,0 +1,10 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # If the file exists in public/, serve it directly
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
+    RewriteRule ^(.+)$ public/$1 [L]
+
+    # Everything else goes through public/index.php (Laravel)
+    RewriteRule ^ public/index.php [L]
+</IfModule>

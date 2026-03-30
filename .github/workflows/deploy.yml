@@ -48,19 +48,8 @@ jobs:
           cp -r backend/* htdocs/
           rm -rf htdocs/node_modules htdocs/.env
 
-          # 2. Create root .htaccess that routes everything through public/
-          cat > htdocs/.htaccess << 'HTACCESS'
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-
-    # If the file exists in public/, serve it directly
-    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
-    RewriteRule ^(.+)$ public/$1 [L]
-
-    # Everything else goes through public/index.php (Laravel)
-    RewriteRule ^ public/index.php [L]
-</IfModule>
-HTACCESS
+          # 2. Copy root .htaccess (routes everything through public/)
+          cp htaccess-root htdocs/.htaccess
 
           # 3. Patch manifest key to match blade @vite call
           MANIFEST=""
