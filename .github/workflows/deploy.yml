@@ -49,20 +49,18 @@ jobs:
           rm -rf htdocs/node_modules htdocs/.env
 
           # 2. Create root .htaccess that routes everything through public/
-          #    This is the standard shared hosting trick for Laravel
-          cat > htdocs/.htaccess << 'EOF'
-          <IfModule mod_rewrite.c>
-              RewriteEngine On
+          cat > htdocs/.htaccess << 'HTACCESS'
+<IfModule mod_rewrite.c>
+    RewriteEngine On
 
-              # Serve existing files/folders directly
-              RewriteCond %{REQUEST_FILENAME} -f [OR]
-              RewriteCond %{REQUEST_FILENAME} -d
-              RewriteRule ^ - [L]
+    # If the file exists in public/, serve it directly
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
+    RewriteRule ^(.+)$ public/$1 [L]
 
-              # Route everything else through public/index.php
-              RewriteRule ^(.*)$ public/$1 [L]
-          </IfModule>
-          EOF
+    # Everything else goes through public/index.php (Laravel)
+    RewriteRule ^ public/index.php [L]
+</IfModule>
+HTACCESS
 
           # 3. Patch manifest key to match blade @vite call
           MANIFEST=""
