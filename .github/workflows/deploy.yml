@@ -85,6 +85,7 @@ jobs:
           # 3. Handle storage correctly for shared hosting
           mkdir -p htdocs/public/storage
           cp -r backend/storage/app/public/* htdocs/public/storage/ || true
+          cp -r backend/public/storage/* htdocs/public/storage/ || true
 
           # 4. Patch manifest key to match blade @vite call
           MANIFEST=""
