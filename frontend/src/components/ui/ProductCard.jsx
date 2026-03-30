@@ -112,7 +112,10 @@ const ProductCard = ({ product }) => {
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         alt={product.name}
                         src={imageUrl}
-                        onError={(e) => { e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(product.name) + '&background=f6f3f4&color=b0004a&size=400'; }}
+                        onError={(e) => { 
+                            console.error('Image failed to load:', imageUrl);
+                            e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(product.name) + '&background=f6f3f4&color=b0004a&size=400'; 
+                        }}
                     />
                 </Link>
 
