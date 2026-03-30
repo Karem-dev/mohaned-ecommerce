@@ -31,12 +31,6 @@ const CheckoutPage = () => {
         notes: ''
     });
 
-    useEffect(() => {
-        const verify = async () => {
-            await checkVerificationBeforeOrder();
-        };
-        verify();
-    }, [checkVerificationBeforeOrder]);
 
     const { data: cartResp, isLoading: cartLoading } = useQuery({
         queryKey: ['cart'],

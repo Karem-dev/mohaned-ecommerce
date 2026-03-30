@@ -35,12 +35,7 @@ class OrderController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        if (!$request->user()->email_verified_at) {
-            return response()->json([
-                'message' => 'Identity Validation Required. Please verify your identity to proceed with this curation.',
-                'verified' => false
-            ], 403);
-        }
+        // Verification check removed for frictionless checkout experience.
 
         $cart = Cart::where('user_id', $request->user()->id)->first();
         if (!$cart || $cart->cartItems->isEmpty()) {

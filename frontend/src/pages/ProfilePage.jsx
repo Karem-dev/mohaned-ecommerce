@@ -155,7 +155,7 @@ const ProfilePage = () => {
                         </div>
 
                         <div className="space-y-10">
-                             <div className="grid md:grid-cols-2 gap-8">
+                             <div className="grid md:grid-cols-3 gap-8">
                                  <div className="space-y-4">
                                      <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60 ml-2">Current Password</label>
                                      <div className="relative group">
@@ -178,15 +178,34 @@ const ProfilePage = () => {
                                             placeholder="••••••••"
                                             className="w-full bg-surface-container-low border border-outline-variant/10 rounded-2xl py-4 pl-14 pr-6 text-[11px] font-bold focus:border-primary/40 focus:bg-white transition-all shadow-inner"
                                             value={passwordData.password}
-                                            onChange={(e) => setPasswordData({ ...passwordData, password: e.target.value, password_confirmation: e.target.value })}
+                                            onChange={(e) => setPasswordData({ ...passwordData, password: e.target.value })}
+                                         />
+                                     </div>
+                                 </div>
+                                 <div className="space-y-4">
+                                     <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60 ml-2">Confirm New Password</label>
+                                     <div className="relative group">
+                                         <Shield className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/30 group-focus-within:text-primary transition-colors" />
+                                         <input 
+                                            type="password" 
+                                            placeholder="••••••••"
+                                            className="w-full bg-surface-container-low border border-outline-variant/10 rounded-2xl py-4 pl-14 pr-6 text-[11px] font-bold focus:border-primary/40 focus:bg-white transition-all shadow-inner"
+                                            value={passwordData.password_confirmation}
+                                            onChange={(e) => setPasswordData({ ...passwordData, password_confirmation: e.target.value })}
                                          />
                                      </div>
                                  </div>
                              </div>
                              <div className="flex justify-end">
                                 <button 
-                                    onClick={() => updatePasswordMutation.mutate(passwordData)}
-                                    disabled={updatePasswordMutation.isPending || !passwordData.current_password || !passwordData.password}
+                                    onClick={() => {
+                                        if(passwordData.password !== passwordData.password_confirmation) {
+                                            toast.error("New passwords do not match.");
+                                            return;
+                                        }
+                                        updatePasswordMutation.mutate(passwordData);
+                                    }}
+                                    disabled={updatePasswordMutation.isPending || !passwordData.current_password || !passwordData.password || !passwordData.password_confirmation}
                                     className="px-10 py-4 bg-on-surface text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-primary transition-all italic shadow-xl shadow-on-surface/10 disabled:opacity-20"
                                 >
                                     {updatePasswordMutation.isPending ? 'Processing...' : 'Update Credentials'}

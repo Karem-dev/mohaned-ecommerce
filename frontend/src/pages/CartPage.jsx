@@ -231,22 +231,13 @@ const CartPage = () => {
                         </div>
 
                         <button 
-                            onClick={async () => {
+                            onClick={() => {
                                 if (!user) {
                                     toast.error('Identity validation required. Please login.');
                                     navigate('/login');
                                     return;
                                 }
-                                
-                                setIsVerifying(true);
-                                try {
-                                    const isVerified = await checkVerificationBeforeOrder();
-                                    if (isVerified) {
-                                        navigate('/checkout');
-                                    }
-                                } finally {
-                                    setIsVerifying(false);
-                                }
+                                navigate('/checkout');
                             }}
                             disabled={isVerifying}
                             className="w-full bg-primary text-white py-6 rounded-full text-sm font-bold uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all mb-8 flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
