@@ -22,7 +22,7 @@ jobs:
       - name: Build Frontend
         working-directory: ./frontend
         env:
-          VITE_API_BASE_URL: https://rosastore.xo.je/api
+          VITE_API_URL: https://rosastore.xo.je/api
         run: |
           npm install
           npm run build
@@ -39,14 +39,60 @@ jobs:
         working-directory: ./backend
         run: composer install --no-dev --optimize-autoloader
 
+      # Generate .env file from GitHub Secrets
+      - name: Generate .env file
+        run: |
+          cat > backend/.env << 'ENVEOF'
+          APP_NAME=RosaStore
+          APP_ENV=production
+          APP_KEY=${{ secrets.APP_KEY }}
+          APP_DEBUG=false
+          APP_URL=https://rosastore.xo.je
+
+          LOG_CHANNEL=stack
+          LOG_LEVEL=error
+
+          DB_CONNECTION=mysql
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=3306
+          DB_DATABASE=${{ secrets.DB_DATABASE }}
+          DB_USERNAME=${{ secrets.DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+
+          SESSION_DRIVER=file
+          SESSION_LIFETIME=120
+          SESSION_ENCRYPT=false
+          SESSION_PATH=/
+          SESSION_DOMAIN=null
+
+          BROADCAST_CONNECTION=log
+          FILESYSTEM_DISK=local
+          QUEUE_CONNECTION=sync
+          CACHE_STORE=file
+
+          MAIL_MAILER=${{ secrets.MAIL_MAILER }}
+          MAIL_HOST=${{ secrets.MAIL_HOST }}
+          MAIL_PORT=${{ secrets.MAIL_PORT }}
+          MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+          MAIL_ENCRYPTION=ssl
+          MAIL_FROM_ADDRESS=${{ secrets.MAIL_FROM_ADDRESS }}
+          MAIL_FROM_NAME="Rosa Store"
+
+          VITE_APP_NAME="Rosa Store"
+          ENVEOF
+          # Remove leading spaces from heredoc
+          sed -i 's/^          //' backend/.env
+
       # Prepare Deployment Directory (SIMPLE - no flattening)
       - name: Prepare Deployment Directory
         run: |
           mkdir -p htdocs
 
-          # 1. Copy entire backend to htdocs (keeps standard Laravel structure)
+          # 1. Copy entire backend to htdocs (including .env)
           cp -r backend/* htdocs/
-          rm -rf htdocs/node_modules htdocs/.env
+          cp backend/.env htdocs/.env
+          rm -rf htdocs/node_modules
 
           # 2. Copy root .htaccess (routes everything through public/)
           cp htaccess-root htdocs/.htaccess
@@ -76,7 +122,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./htdocs/
           server-dir: /htdocs/
-          dangerous-clean-slate: true
+          # dangerous-clean-slate: true
           exclude: |
             **/.git*
             **/.git*/**
