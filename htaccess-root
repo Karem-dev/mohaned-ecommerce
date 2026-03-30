@@ -2,13 +2,18 @@
     RewriteEngine On
     RewriteBase /
 
-    # Bridge for storage on shared hosting
+    # 1. Map /storage URL to the actual physical path in Laravel's deep directory
+    # This checks if the file exists in storage/app/public/...
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^storage/(.*)$ storage/app/public/$1 [L]
 
-    # If the file exists in public/, serve it directly
+    # 2. Map existing public assets (CSS, JS, etc.)
     RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
     RewriteRule ^(.+)$ public/$1 [L]
 
-    # Everything else goes through public/index.php (Laravel)
+    # 3. Handle everything else via Laravel's index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^ public/index.php [L]
 </IfModule>
