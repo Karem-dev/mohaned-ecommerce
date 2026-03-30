@@ -8,7 +8,7 @@ export default defineConfig({
   build: {
     outDir: '../backend/public/build',
     emptyOutDir: true,
-    manifest: true,
+    manifest: 'manifest.json',
     rollupOptions: {
       input: resolve(__dirname, 'src/main.jsx'),
     },
