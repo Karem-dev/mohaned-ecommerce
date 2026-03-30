@@ -63,6 +63,18 @@ jobs:
           sed -i "s|require_once __DIR__.'/../bootstrap/app.php'|require_once __DIR__.'/bootstrap/app.php'|g" htdocs/index.php
           sed -i "s|__DIR__.'/../storage/framework/maintenance.php'|__DIR__.'/storage/framework/maintenance.php'|g" htdocs/index.php
 
+          # 5. Fix bootstrap/app.php basePath for flat structure
+          sed -i "s|dirname(__DIR__)|__DIR__|g" htdocs/bootstrap/app.php
+
+          # 6. Patch manifest.json: rename any key to 'src/main.jsx' so blade @vite works
+          if [ -f "htdocs/build/.vite/manifest.json" ]; then
+            MANIFEST_KEY=$(cat htdocs/build/.vite/manifest.json | python3 -c "import sys,json; d=json.load(sys.stdin); print(list(d.keys())[0])")
+            if [ "$MANIFEST_KEY" != "src/main.jsx" ]; then
+              sed -i "s|\"$MANIFEST_KEY\"|\"src/main.jsx\"|g" htdocs/build/.vite/manifest.json
+            fi
+            echo "Manifest key is now: src/main.jsx"
+          fi
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
