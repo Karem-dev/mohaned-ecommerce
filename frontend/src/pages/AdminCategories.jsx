@@ -90,27 +90,27 @@ const AdminCategories = () => {
                 <div className="space-y-1">
                     <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-widest">
                         <FolderTree className="w-4 h-4" />
-                        Hierarchy Setup
+                        Category List
                     </div>
                     <h1 className="text-4xl lg:text-6xl font-bold text-[#351e24] tracking-tighter uppercase italic leading-none">
-                        Category <span className="text-primary">Management</span>
+                        Manage <span className="text-primary">Categories</span>
                     </h1>
                 </div>
                 <div className="flex flex-wrap gap-4">
                     <button
                         onClick={() => {
                             queryClient.invalidateQueries(['adminCategories']);
-                            toast.success('List synced');
+                            toast.success('List updated');
                         }}
                         className="px-8 py-5 bg-white border border-[#fde2e7] text-[#351e24] rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-rose-50 transition-all shadow-sm flex items-center gap-3 group"
                     >
-                        <RefreshCcw className="w-4 h-4" /> Sync
+                        <RefreshCcw className="w-4 h-4" /> Refresh
                     </button>
                     <button
                         onClick={handleAdd}
                         className="px-12 py-5 bg-[#351e24] text-white rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-xl shadow-[#351e24]/10 flex items-center gap-3"
                     >
-                        <Plus className="w-4 h-4" /> New Category
+                        <Plus className="w-4 h-4" /> Add Category
                     </button>
                 </div>
             </header>

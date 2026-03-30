@@ -23,6 +23,14 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { createAdminProduct, updateAdminProduct } from '../../services/adminService';
 
+// ── Simplified Label ────────────────────────────────────────────────────────
+const SimpleLabel = ({ label, hint }) => (
+    <div className="flex flex-col gap-0.5 mb-3">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-[#351e24]">{label}</span>
+        {hint && <span className="text-[8px] font-medium text-primary/40 italic">{hint}</span>}
+    </div>
+);
+
 const INITIAL_FORM = {
     name: '',
     category_ids: [],
@@ -44,7 +52,6 @@ const ProductModal = ({ isOpen, onClose, product, categories }) => {
     const [previews, setPreviews] = useState([]);
     const [errors, setErrors] = useState({});
 
-    // Reset when modal state changes
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
@@ -61,7 +68,7 @@ const ProductModal = ({ isOpen, onClose, product, categories }) => {
                     is_featured: product.is_featured ? 1 : 0,
                     images: [],
                     variants: product.variants?.map(v => ({
-                        type: v.type, // 'size' or 'color'
+                        type: v.type,
                         value: v.value,
                         price_override: v.price_override || '',
                         stock: v.stock || 0
@@ -75,10 +82,7 @@ const ProductModal = ({ isOpen, onClose, product, categories }) => {
         } else {
             document.body.style.overflow = 'unset';
         }
-
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
+        return () => { document.body.style.overflow = 'unset'; };
     }, [product, isOpen]);
 
     const mutation = useMutation({
@@ -88,15 +92,15 @@ const ProductModal = ({ isOpen, onClose, product, categories }) => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries(['adminProducts']);
-            toast.success(product ? 'Product saved' : 'Product created');
+            toast.success(product ? 'Product updated.' : 'Product created.');
             onClose();
         },
         onError: (err) => {
             if (err.response?.status === 422) {
                 setErrors(err.response.data.errors || {});
-                toast.error('Check form errors');
+                toast.error('Check form details.');
             } else {
-                toast.error(err.response?.data?.message || 'Server error');
+                toast.error(err.response?.data?.message || 'Error occurred.');
             }
         }
     });
@@ -135,10 +139,7 @@ const ProductModal = ({ isOpen, onClose, product, categories }) => {
     };
 
     const removeVariant = (index) => {
-        setFormData(prev => ({
-            ...prev,
-            variants: prev.variants.filter((_, i) => i !== index)
-        }));
+        setFormData(prev => ({ ...prev, variants: prev.variants.filter((_, i) => i !== index) }));
     };
 
     const handleVariantChange = (index, field, value) => {
@@ -176,39 +177,36 @@ const ProductModal = ({ isOpen, onClose, product, categories }) => {
     if (!isOpen) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-10">
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-[#351e24]/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-10">
+            <div className="absolute inset-0 bg-[#1a1410]/60 backdrop-blur-md animate-in fade-in duration-500" onClick={onClose} />
 
-            {/* Modal Body */}
-            <div className="relative w-full max-w-5xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-[#fde2e7] animate-in zoom-in-95 duration-300">
+            <div className="relative w-full max-w-5xl bg-white rounded-[3rem] shadow-[0_32px_80px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col max-h-[90vh] border border-white/20 animate-in zoom-in-95 duration-500">
                 
-                {/* Header */}
-                <div className="p-8 border-b border-[#fde2e7] flex items-center justify-between bg-[#fffbfb]">
-                    <div className="flex items-center gap-5">
-                        <div className="p-3 bg-primary/10 rounded-2xl text-primary">
+                {/* Modern Header */}
+                <div className="p-8 pb-4 flex items-center justify-between border-b border-outline-variant/10">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
                             <Package className="w-6 h-6" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold text-[#351e24] tracking-tight">{product ? 'Update Product' : 'Add New Product'}</h2>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#351e24]/40 italic">Catalog Management</p>
+                            <h3 className="text-2xl font-bold text-[#1a1410] tracking-tight">{product ? 'Update' : 'New'} Product</h3>
+                            <p className="text-[10px] uppercase tracking-widest text-[#1a1410]/40 font-bold">Catalog Item Specifications</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-3 hover:bg-rose-50 rounded-2xl transition-all text-[#351e24]/20 hover:text-primary">
-                        <X className="w-6 h-6" />
+                    <button onClick={onClose} className="w-10 h-10 flex items-center justify-center bg-surface-container-low rounded-xl text-on-surface-variant hover:text-primary transition-all">
+                        <X className="w-5 h-5" />
                     </button>
                 </div>
 
-                {/* Content */}
                 <form id="product-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar">
                     
                     {/* Error Alerts */}
                     {Object.keys(errors).length > 0 && (
                         <div className="p-5 bg-rose-50 border border-primary/10 rounded-2xl space-y-2">
                             <p className="text-[10px] font-black uppercase text-primary italic flex items-center gap-2">
-                                <AlertCircle className="w-4 h-4" /> Please fix these details:
+                                <AlertCircle className="w-4 h-4" /> Required information missing:
                             </p>
-                            <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-6 list-disc list-inside">
+                            <ul className="grid md:grid-cols-2 gap-x-6 list-disc list-inside">
                                 {Object.values(errors).map((err, i) => (
                                     <li key={i} className="text-[10px] font-bold text-primary italic uppercase">{err[0]}</li>
                                 ))}
@@ -216,163 +214,143 @@ const ProductModal = ({ isOpen, onClose, product, categories }) => {
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                    <div className="grid lg:grid-cols-12 gap-10">
                         
-                        {/* Left: Images & Media */}
-                        <div className="lg:col-span-5 space-y-8">
+                        {/* Media Section */}
+                        <div className="lg:col-span-4 space-y-8">
                             <div>
-                                <h4 className="text-[11px] font-black uppercase tracking-widest text-[#351e24]/30 mb-5 italic">Product Media</h4>
-                                <div className="grid grid-cols-2 gap-4">
+                                <SimpleLabel label="Product Media" hint="Showcase your item (multiple images)" />
+                                <div className="grid grid-cols-2 gap-3">
                                     {previews.map((src, i) => (
-                                        <div key={i} className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-[#fde2e7] group">
-                                            <img src={src} className="w-full h-full object-cover" alt="" />
+                                        <div key={i} className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-outline-variant/10 group bg-surface-container-low">
+                                            <img src={src} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
                                             <button 
-                                                type="button" 
-                                                onClick={() => removeImage(i)}
-                                                className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-white/90 rounded-xl text-primary opacity-0 group-hover:opacity-100 transition-opacity"
+                                                type="button" onClick={() => removeImage(i)}
+                                                className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-white/90 rounded-xl text-primary opacity-0 group-hover:opacity-100 transition-all shadow-sm"
                                             >
                                                 <X className="w-4 h-4" />
                                             </button>
                                         </div>
                                     ))}
                                     <button 
-                                        type="button" 
-                                        onClick={() => fileInputRef.current?.click()}
-                                        className="aspect-[3/4] rounded-2xl border-2 border-dashed border-[#fde2e7] hover:border-primary/30 flex flex-col items-center justify-center text-[#351e24]/20 hover:text-primary transition-all bg-[#fffbfb]"
+                                        type="button" onClick={() => fileInputRef.current?.click()}
+                                        className="aspect-[3/4] rounded-2xl border-2 border-dashed border-primary/20 hover:border-primary/40 flex flex-col items-center justify-center text-primary/30 hover:text-primary transition-all bg-surface-container-low/30"
                                     >
                                         <Plus className="w-6 h-6" />
-                                        <span className="text-[9px] font-bold uppercase mt-2 tracking-widest">Add Photo</span>
+                                        <span className="text-[9px] font-bold uppercase mt-2">Add Photo</span>
                                     </button>
                                 </div>
                                 <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" multiple />
                             </div>
 
-                            <div className="pt-8 border-t border-[#fde2e7] space-y-4">
-                                <h4 className="text-[11px] font-black uppercase tracking-widest text-[#351e24]/30 italic">Store Display</h4>
-                                <div className="grid grid-cols-1 gap-3">
-                                    <label className="flex items-center justify-between p-5 bg-[#fffbfb] rounded-2xl border border-[#fde2e7] cursor-pointer">
-                                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#351e24]">Show in shop</span>
-                                        <input type="checkbox" name="is_active" className="w-5 h-5 accent-primary" checked={formData.is_active === 1} onChange={handleInputChange} />
+                            <div className="pt-8 border-t border-outline-variant/10 space-y-4">
+                                <SimpleLabel label="Shop Visibility" hint="Control how it appears online" />
+                                <div className="space-y-3">
+                                    <label className="flex items-center justify-between p-4 bg-surface-container-low/40 rounded-2xl border border-outline-variant/5 cursor-pointer hover:bg-surface-container-low transition-colors">
+                                        <span className="text-[10px] font-bold uppercase text-on-surface">Live Online</span>
+                                        <div className="relative">
+                                            <input type="checkbox" name="is_active" className="sr-only peer" checked={formData.is_active === 1} onChange={handleInputChange} />
+                                            <div className="w-10 h-6 bg-surface-container-high rounded-full peer peer-checked:bg-primary transition-colors after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:rounded-full after:h-[18px] after:w-[18px] after:transition-all peer-checked:after:translate-x-full"></div>
+                                        </div>
                                     </label>
-                                    <label className="flex items-center justify-between p-5 bg-[#fffbfb] rounded-2xl border border-[#fde2e7] cursor-pointer">
-                                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#351e24]">Star choice (Featured)</span>
-                                        <input type="checkbox" name="is_featured" className="w-5 h-5 accent-primary" checked={formData.is_featured === 1} onChange={handleInputChange} />
+                                    <label className="flex items-center justify-between p-4 bg-surface-container-low/40 rounded-2xl border border-outline-variant/5 cursor-pointer hover:bg-surface-container-low transition-colors">
+                                        <span className="text-[10px] font-bold uppercase text-on-surface">Mark as Featured</span>
+                                        <div className="relative">
+                                            <input type="checkbox" name="is_featured" className="sr-only peer" checked={formData.is_featured === 1} onChange={handleInputChange} />
+                                            <div className="w-10 h-6 bg-surface-container-high rounded-full peer peer-checked:bg-emerald-500 transition-colors after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:rounded-full after:h-[18px] after:w-[18px] after:transition-all peer-checked:after:translate-x-full"></div>
+                                        </div>
                                     </label>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Right: Info Panels */}
-                        <div className="lg:col-span-7 space-y-8">
-                            
-                            {/* Basic Info */}
-                            <div className="space-y-6">
+                        {/* Details Section */}
+                        <div className="lg:col-span-8 space-y-8">
+                            <div className="grid md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-[11px] font-black uppercase text-[#351e24]/40 ml-2">Product Name</label>
+                                    <SimpleLabel label="Product Name" hint="What customers will call it" />
                                     <input 
-                                        name="name" type="text" placeholder="e.g. Silk Evening Dress"
-                                        className="w-full p-5 rounded-2xl border border-[#fde2e7] focus:ring-4 focus:ring-rose-50 outline-none font-bold text-[#351e24] transition-all"
+                                        name="name" type="text" placeholder="Silk evening dress..."
+                                        className="w-full bg-surface-container-low px-6 py-4 rounded-xl border border-outline-variant/10 text-sm font-bold text-[#1a1410] focus:bg-white focus:border-primary/40 transition-all outline-none"
                                         value={formData.name} onChange={handleInputChange}
                                     />
                                 </div>
-
                                 <div className="space-y-2">
-                                    <label className="text-[11px] font-black uppercase text-[#351e24]/40 ml-2">Collections</label>
+                                    <SimpleLabel label="Collections" hint="Must belong to at least one" />
                                     <div className="flex flex-wrap gap-2">
                                         {categories?.map(cat => (
                                             <button 
                                                 key={cat.id} type="button" onClick={() => toggleCategory(cat.id)}
-                                                className={`px-4 py-3 rounded-xl text-[10px] font-bold uppercase transition-all border ${formData.category_ids.includes(cat.id) ? 'bg-[#351e24] text-white' : 'bg-white text-zinc-300 border-[#fde2e7]'}`}
+                                                className={`px-4 py-2.5 rounded-lg text-[9px] font-bold uppercase transition-all border ${formData.category_ids.includes(cat.id) ? 'bg-on-surface text-white border-on-surface' : 'bg-white text-on-surface-variant border-outline-variant/20 hover:border-primary/40'}`}
                                             >
                                                 {cat.name}
                                             </button>
                                         ))}
                                     </div>
                                 </div>
+                            </div>
 
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[11px] font-black uppercase text-[#351e24]/40 ml-2">Price ($)</label>
-                                        <input name="price" type="number" className="w-full p-5 rounded-2xl border border-[#fde2e7] outline-none font-bold italic" value={formData.price} onChange={handleInputChange} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[11px] font-black uppercase text-[#351e24]/40 ml-2">SKU Code</label>
-                                        <input name="sku" type="text" className="w-full p-5 rounded-2xl border border-[#fde2e7] outline-none font-bold uppercase" value={formData.sku} onChange={handleInputChange} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[11px] font-black uppercase text-[#351e24]/40 ml-2">Total Stock</label>
-                                        <input name="stock" type="number" className="w-full p-5 rounded-2xl border border-[#fde2e7] outline-none font-bold italic" value={formData.stock} onChange={handleInputChange} />
-                                    </div>
+                            <div className="grid grid-cols-3 gap-6">
+                                <div className="space-y-2">
+                                    <SimpleLabel label="Price ($)" hint="Unit price" />
+                                    <input name="price" type="number" className="w-full bg-surface-container-low px-6 py-4 rounded-xl border border-outline-variant/10 text-sm font-bold text-primary outline-none" value={formData.price} onChange={handleInputChange} />
+                                </div>
+                                <div className="space-y-2">
+                                    <SimpleLabel label="SKU" hint="Internal tracking code" />
+                                    <input name="sku" type="text" className="w-full bg-surface-container-low px-6 py-4 rounded-xl border border-outline-variant/10 text-sm font-bold uppercase outline-none" value={formData.sku} onChange={handleInputChange} />
+                                </div>
+                                <div className="space-y-2">
+                                    <SimpleLabel label="Stock" hint="Total pieces available" />
+                                    <input name="stock" type="number" className="w-full bg-surface-container-low px-6 py-4 rounded-xl border border-outline-variant/10 text-sm font-bold outline-none" value={formData.stock} onChange={handleInputChange} />
                                 </div>
                             </div>
 
-                            {/* Variants Section - Simplified */}
-                            <div className="pt-8 border-t border-[#fde2e7] space-y-6">
+                            {/* Options / Variants */}
+                            <div className="pt-8 border-t border-outline-variant/10 space-y-6">
                                 <div className="flex items-center justify-between">
-                                    <h4 className="text-[11px] font-black uppercase tracking-widest text-[#351e24]/30 italic">Options (Sizes / Colors)</h4>
+                                    <SimpleLabel label="Product Options" hint="Define sizes, colors, or styles" />
                                     <button 
                                         type="button" onClick={addVariant}
-                                        className="px-4 py-2 bg-primary text-white text-[9px] font-black uppercase rounded-lg hover:bg-[#351e24] transition-all flex items-center gap-2"
+                                        className="px-4 py-2 bg-on-surface text-white text-[9px] font-bold uppercase rounded-xl hover:bg-primary transition-all flex items-center gap-2"
                                     >
                                         <Plus className="w-3 h-3" /> Add Option
                                     </button>
                                 </div>
-
-                                <div className="space-y-4">
+                                <div className="space-y-3">
                                     {formData.variants.map((v, i) => (
-                                        <div key={i} className="flex flex-wrap items-end gap-3 p-5 bg-[#fffbfb] rounded-2xl border border-[#fde2e7] group relative">
-                                            <div className="flex-1 min-w-[80px]">
-                                                <label className="text-[8px] font-black uppercase text-[#351e24]/20 block mb-2">Type</label>
-                                                <select value={v.type} onChange={(e) => handleVariantChange(i, 'type', e.target.value)} className="w-full p-3 rounded-lg border border-transparent bg-white text-[10px] font-bold uppercase outline-none">
-                                                    <option value="size">Size</option>
-                                                    <option value="color">Color</option>
-                                                </select>
-                                            </div>
-                                            <div className="flex-1 min-w-[100px]">
-                                                <label className="text-[8px] font-black uppercase text-[#351e24]/20 block mb-2">Value (e.g. Red, XL)</label>
-                                                <input value={v.value} onChange={(e) => handleVariantChange(i, 'value', e.target.value)} className="w-full p-3 rounded-lg bg-white border border-transparent text-[10px] font-bold outline-none" placeholder="Enter value" />
-                                            </div>
-                                            <div className="w-24">
-                                                <label className="text-[8px] font-black uppercase text-[#351e24]/20 block mb-2">Price ($)</label>
-                                                <input value={v.price_override} onChange={(e) => handleVariantChange(i, 'price_override', e.target.value)} className="w-full p-3 rounded-lg bg-white border border-transparent text-[10px] font-bold outline-none" placeholder="Extra costs" />
-                                            </div>
-                                            <div className="w-20">
-                                                <label className="text-[8px] font-black uppercase text-[#351e24]/20 block mb-2">Stock</label>
-                                                <input value={v.stock} onChange={(e) => handleVariantChange(i, 'stock', e.target.value)} className="w-full p-3 rounded-lg bg-white border border-transparent text-[10px] font-bold outline-none" />
-                                            </div>
-                                            <button 
-                                                type="button" onClick={() => removeVariant(i)}
-                                                className="w-10 h-10 flex items-center justify-center text-primary/30 hover:text-primary transition-all p-2"
-                                            >
-                                                <Trash2 className="w-5 h-5" />
-                                            </button>
+                                        <div key={i} className="flex items-center gap-3 p-4 bg-surface-container-low rounded-2xl border border-outline-variant/5">
+                                            <select value={v.type} onChange={(e) => handleVariantChange(i, 'type', e.target.value)} className="bg-white px-4 py-2.5 rounded-lg border border-outline-variant/10 text-[10px] font-bold uppercase outline-none">
+                                                <option value="size">Size</option>
+                                                <option value="color">Color</option>
+                                            </select>
+                                            <input value={v.value} onChange={(e) => handleVariantChange(i, 'value', e.target.value)} className="flex-1 bg-white px-4 py-2.5 rounded-lg border border-outline-variant/10 text-[10px] font-bold outline-none" placeholder="Red, XL, etc." />
+                                            <input value={v.price_override} onChange={(e) => handleVariantChange(i, 'price_override', e.target.value)} className="w-20 bg-white px-4 py-2.5 rounded-lg border border-outline-variant/10 text-[10px] font-bold outline-none text-primary" placeholder="+ $" />
+                                            <input value={v.stock} onChange={(e) => handleVariantChange(i, 'stock', e.target.value)} className="w-16 bg-white px-4 py-2.5 rounded-lg border border-outline-variant/10 text-[10px] font-bold outline-none" placeholder="Qty" />
+                                            <button type="button" onClick={() => removeVariant(i)} className="p-2 text-on-surface-variant/40 hover:text-primary transition-colors"><Trash2 className="w-4 h-4" /></button>
                                         </div>
                                     ))}
-                                    {formData.variants.length === 0 && (
-                                        <p className="text-center py-6 text-[10px] text-[#351e24]/20 font-bold italic uppercase">No extra options added.</p>
-                                    )}
+                                    {formData.variants.length === 0 && <p className="text-center py-4 text-[9px] font-medium text-on-surface-variant/30 uppercase italic">No extra options defined.</p>}
                                 </div>
                             </div>
 
-                            {/* Description */}
-                            <div className="space-y-2">
-                                <label className="text-[11px] font-black uppercase text-[#351e24]/40 ml-2">Description</label>
+                            <div className="space-y-4">
+                                <SimpleLabel label="Description" hint="Tell the story of this product" />
                                 <textarea 
-                                    name="description" rows="3" className="w-full p-5 rounded-2xl border border-[#fde2e7] outline-none font-medium text-sm leading-relaxed no-scrollbar"
+                                    name="description" rows="4" className="w-full bg-surface-container-low px-6 py-4 rounded-xl border border-outline-variant/10 text-sm font-medium leading-relaxed outline-none focus:bg-white transition-all no-scrollbar"
                                     value={formData.description} onChange={handleInputChange} 
-                                    placeholder="Tell the story of this product..."
+                                    placeholder="Crafted from the finest materials..."
                                 />
                             </div>
                         </div>
                     </div>
                 </form>
 
-                {/* Actions */}
-                <div className="p-8 bg-[#fffbfb] border-t border-[#fde2e7] flex items-center justify-end gap-5">
-                    <button onClick={onClose} className="px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-[#351e24]/20 hover:text-primary transition-all">Cancel</button>
+                {/* Footer Actions */}
+                <div className="p-8 border-t border-outline-variant/10 bg-surface-container-low flex items-center justify-end gap-6 shrink-0">
+                    <button onClick={onClose} className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant hover:text-primary transition-colors">Discard</button>
                     <button 
                         form="product-form" disabled={mutation.isPending}
-                        className="bg-[#351e24] text-white px-12 py-5 rounded-2xl shadow-xl hover:bg-black transition-all flex items-center gap-3 font-bold uppercase text-[11px] italic"
+                        className="bg-on-surface text-white px-10 py-4 rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-3 shadow-xl shadow-on-surface/10 disabled:opacity-50"
                     >
                         {mutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                         {product ? 'Save Changes' : 'Publish Product'}

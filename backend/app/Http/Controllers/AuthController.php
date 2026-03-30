@@ -29,22 +29,9 @@ class AuthController extends Controller
             'phone' => $request->phone,
             'password' => Hash::make($request->password),
             'role' => 'customer',
+            'email_verified_at' => now(), // Auto-verify
             'avatar' => 'https://ui-avatars.com/api/?name='.urlencode($request->name),
         ]);
-
-        $otp = (string) rand(100000, 999999);
-        $user->update([
-            'otp' => $otp,
-            'otp_expires_at' => now()->addMinutes(15),
-        ]);
-        
-        try {
-            Mail::to($user->email)->send(new VerificationMail($otp));
-        } catch (\Exception $e) {
-            Log::error("Mail delivery failure for {$user->email}: " . $e->getMessage());
-        }
-        
-        Log::info("AUTHENTICATION PROTOCOL: OTP for {$user->email} is {$otp}");
 
         // 🔥 Dispatch Administrative Notification
         \App\Models\Notification::create([
@@ -60,8 +47,9 @@ class AuthController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'User registered. Please verify your identity.',
+            'message' => 'User registered successfully.',
             'user' => new UserResource($user),
+            'token' => $user->createToken('auth_token')->plainTextToken,
         ], 201);
     }
 
@@ -178,32 +166,12 @@ class AuthController extends Controller
             'avatar' => 'nullable|string',
         ]);
 
-        $emailChanged = isset($data['email']) && $data['email'] !== $user->email;
-
-        if ($emailChanged) {
-            $otp = (string) rand(100000, 999999);
-            $data['otp'] = $otp;
-            $data['otp_expires_at'] = now()->addMinutes(15);
-            $data['email_verified_at'] = null;
-        }
-
         $user->update($data);
 
-        if ($emailChanged) {
-            try {
-                Mail::to($user->email)->send(new VerificationMail($data['otp']));
-            } catch (\Exception $e) {
-                Log::error("Update mail delivery failure for {$user->email}: " . $e->getMessage());
-            }
-            Log::info("IDENTITY UPDATE PROTOCOL: New OTP for {$user->email} is {$data['otp']}");
-        }
-
         return response()->json([
-            'message' => $emailChanged 
-                ? 'Profile updated. Please verify your new email address.' 
-                : 'Profile updated successfully',
+            'message' => 'Profile updated successfully',
             'user' => new UserResource($user),
-            'requires_verification' => $emailChanged
+            'requires_verification' => false
         ]);
     }
 

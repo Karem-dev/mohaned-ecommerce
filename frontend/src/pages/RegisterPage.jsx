@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { register } from '../services/authService';
+import useAuthStore from '../store/authStore';
 
 const RegisterPage = () => {
+    const { setUser: setAuth, setToken } = useAuthStore();
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -19,9 +21,12 @@ const RegisterPage = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            await register(formData);
-            toast.success(`Verification protocol dispatched to ${formData.email}`);
-            navigate('/verify-otp', { state: { email: formData.email } });
+            const res = await register(formData);
+            const data = res.data || res;
+            setAuth(data.user);
+            setToken(data.token);
+            toast.success(`Welcome to the gallery, ${formData.name}`);
+            navigate('/');
         } catch (err) {
             const errors = err.response?.data?.errors;
             if (errors) {

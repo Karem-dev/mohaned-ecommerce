@@ -91,10 +91,10 @@ const AdminProducts = () => {
                 <div className="space-y-1">
                     <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-widest">
                         <Package className="w-4 h-4" />
-                        Product Catalog
+                        Inventory
                     </div>
                     <h1 className="text-4xl lg:text-6xl font-bold text-[#351e24] tracking-tighter uppercase italic leading-none">
-                        Products <span className="text-primary">& Listing</span>
+                        Manage <span className="text-primary">Products</span>
                     </h1>
                 </div>
                 <div className="flex flex-wrap gap-4">

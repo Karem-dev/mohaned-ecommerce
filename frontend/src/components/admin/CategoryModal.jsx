@@ -13,11 +13,11 @@ import {
 import { toast } from 'react-hot-toast';
 import { createAdminCategory, updateAdminCategory } from '../../services/adminService';
 
-// ── Bilingual Helper ────────────────────────────────────────────────────────
-const BiLabel = ({ en, ar, sub = false }) => (
+// ── Simplified Label ────────────────────────────────────────────────────────
+const SimpleLabel = ({ label, hint }) => (
     <div className="flex flex-col gap-0.5 mb-3">
-        <span className={`${sub ? 'text-[8px]' : 'text-[9px]'} font-black uppercase tracking-[0.2em] italic text-[#b0004a]/40 group-focus-within:text-primary transition-colors`}>{en}</span>
-        <span className={`${sub ? 'text-[9px]' : 'text-[11px]'} font-bold text-zinc-300 group-focus-within:text-zinc-600 transition-colors`} style={{ fontFamily: "'Cairo', sans-serif" }}>{ar}</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-[#351e24]">{label}</span>
+        {hint && <span className="text-[8px] font-medium text-primary/40 italic">{hint}</span>}
     </div>
 );
 
@@ -47,14 +47,9 @@ const CategoryModal = ({ isOpen, onClose, category, allCategories }) => {
                 });
                 setPreviewUrl(category.image_url || '');
             } else {
-                // Clear all fields for new category
                 setFormData({ ...INITIAL_FORM });
                 setPreviewUrl('');
             }
-        } else {
-            // Also clear on close
-            setFormData({ ...INITIAL_FORM });
-            setPreviewUrl('');
         }
     }, [category, isOpen]);
 
@@ -65,7 +60,6 @@ const CategoryModal = ({ isOpen, onClose, category, allCategories }) => {
             [name]: type === 'checkbox' ? checked : value
         }));
 
-        // Auto-generate slug from name if adding new
         if (name === 'name' && !category) {
             setFormData(prev => ({
                 ...prev,
@@ -103,11 +97,11 @@ const CategoryModal = ({ isOpen, onClose, category, allCategories }) => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries(['adminCategories']);
-            toast.success(`Category ${category ? 'updated' : 'created'} · تم الحفظ`);
+            toast.success(`Category saved successfully.`);
             onClose();
         },
         onError: (err) => {
-            toast.error(err.response?.data?.message || 'Something went wrong · حدث خطأ');
+            toast.error(err.response?.data?.message || 'Error occurred.');
         }
     });
 
@@ -119,104 +113,97 @@ const CategoryModal = ({ isOpen, onClose, category, allCategories }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 lg:p-12 overflow-hidden selection:bg-primary/10 selection:text-primary">
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-[#351e24]/40 backdrop-blur-sm animate-in fade-in duration-500" onClick={onClose} />
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 md:p-12 overflow-hidden selection:bg-primary/10">
+            <div className="absolute inset-0 bg-[#1a1410]/60 backdrop-blur-md animate-in fade-in duration-500" onClick={onClose} />
 
-            {/* Modal Content */}
-            <div className={`relative w-full max-w-2xl bg-[#fffbfb] rounded-[4rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-500 flex flex-col max-h-full border border-white/50`}>
+            <div className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-[0_32px_80px_rgba(0,0,0,0.25)] overflow-hidden animate-in zoom-in-95 duration-500 flex flex-col max-h-full border border-white/20">
 
-                {/* Header */}
-                <div className="relative h-40 bg-[#fff9fa] border-b border-[#fde2e7] shrink-0 group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-rose-50/30 opacity-50" />
-                    <button onClick={onClose} className="absolute top-8 right-8 w-12 h-12 flex items-center justify-center bg-white rounded-2xl text-zinc-300 hover:text-primary hover:rotate-90 transition-all shadow-sm z-10 border border-[#fde2e7]">
+                {/* Modern Header */}
+                <div className="p-8 pb-4 flex items-center justify-between border-b border-outline-variant/10">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                            <Layers className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h3 className="text-2xl font-bold text-[#1a1410] tracking-tight">{category ? 'Update' : 'New'} Category</h3>
+                            <p className="text-[10px] uppercase tracking-widest text-[#1a1410]/40 font-bold">Category Details & Information</p>
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="w-10 h-10 flex items-center justify-center bg-surface-container-low rounded-xl text-on-surface-variant hover:text-primary transition-all">
                         <X className="w-5 h-5" />
                     </button>
-                    <div className="absolute bottom-8 left-12 flex items-end gap-6">
-                        <div className="w-20 h-20 bg-white rounded-3xl shadow-xl flex items-center justify-center text-primary group-hover:scale-110 group-hover:rotate-6 transition-all duration-700 border border-[#fde2e7]">
-                            <Layers className="w-9 h-9" />
-                        </div>
-                        <div className="mb-2">
-                            <h3 className="text-4xl font-black text-[#351e24] tracking-tighter italic uppercase leading-tight">{category ? 'Edit' : 'New'} <span className="text-primary">Category</span></h3>
-                            <span className="text-lg font-bold text-zinc-300" style={{ fontFamily: "'Cairo', sans-serif" }}>{category ? 'تحديث القسم' : 'إضافة قسم جديد'}</span>
-                        </div>
-                    </div>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto no-scrollbar custom-scrollbar p-12 space-y-10">
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
 
-                    {/* Image Upload */}
-                    <div className="space-y-6">
-                        <BiLabel en="Category Image" ar="أيقونة أو صورة القسم" />
-                        <div className="flex gap-10 items-center">
-                            <div className="relative group/avatar">
-                                <div className="w-32 h-32 bg-white rounded-[2.5rem] overflow-hidden border-2 border-[#fde2e7] shadow-inner group-hover/avatar:border-primary transition-colors duration-500 relative">
-                                    {previewUrl ? (
-                                        <img src={previewUrl} className="w-full h-full object-cover grayscale group-hover/avatar:grayscale-0 transition-all duration-1000" alt="Preview" />
-                                    ) : (
-                                        <div className="w-full h-full flex flex-col items-center justify-center text-zinc-200">
-                                            <ImageIcon className="w-10 h-10 mb-2 opacity-20" />
-                                            <span className="text-[8px] font-black uppercase tracking-widest">No Image</span>
-                                        </div>
-                                    )}
-                                </div>
-                                <label className="absolute bottom-0 right-0 w-10 h-10 bg-primary text-white rounded-2xl flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-xl shadow-primary/20 hover:rotate-12">
-                                    <Upload className="w-4 h-4" />
-                                    <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
-                                </label>
+                    {/* Image Section */}
+                    <div className="flex flex-col md:flex-row gap-8 items-center bg-surface-container-low/30 p-6 rounded-3xl border border-outline-variant/5">
+                        <div className="relative group/img">
+                            <div className="w-32 h-32 rounded-[2rem] overflow-hidden border-2 border-dashed border-primary/20 bg-white shadow-inner flex items-center justify-center">
+                                {previewUrl ? (
+                                    <img src={previewUrl} className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-700" alt="Preview" />
+                                ) : (
+                                    <div className="text-center opacity-20">
+                                        <ImageIcon className="w-8 h-8 mx-auto mb-2" />
+                                        <span className="text-[8px] font-black uppercase">No Image</span>
+                                    </div>
+                                )}
                             </div>
-                            <div className="max-w-xs space-y-2">
-                                <p className="text-[10px] font-black italic text-[#351e24] uppercase tracking-wider leading-none">Image Guidelines</p>
-                                <p className="text-zinc-400 text-[9px] font-medium leading-relaxed italic">Upload a high-quality image (1000×1000px recommended). JPG/PNG supported.</p>
-                            </div>
+                            <label className="absolute -bottom-2 -right-2 w-10 h-10 bg-primary text-white rounded-2xl flex items-center justify-center cursor-pointer hover:rotate-12 transition-all shadow-xl shadow-primary/20">
+                                <Upload className="w-4 h-4" />
+                                <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+                            </label>
+                        </div>
+                        <div className="flex-1 space-y-2">
+                            <h4 className="text-[10px] font-bold text-[#1a1410] uppercase tracking-widest">Display Picture</h4>
+                            <p className="text-[9px] text-[#1a1410]/40 font-medium leading-relaxed italic">Upload a clear square image to represent this category in the shop.</p>
                         </div>
                     </div>
 
-                    {/* Name & Slug */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="space-y-4 group">
-                            <BiLabel en="Category Name" ar="اسم القسم" sub />
+                    {/* Name & Slug Block */}
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <SimpleLabel label="Category Name" hint="How customers see this in the menu" />
                             <input
                                 required
                                 name="name"
                                 value={formData.name}
                                 onChange={handleChange}
-                                placeholder="e.g. Summer Collection"
-                                className="w-full bg-[#fff9fa]/50 px-6 py-4 rounded-2xl border border-[#fde2e7] text-[11px] font-black italic uppercase tracking-wider text-[#351e24] focus:ring-4 focus:ring-rose-50 focus:border-primary/20 transition-all outline-none"
+                                placeholder="Summer Collection"
+                                className="w-full bg-surface-container-low px-6 py-4 rounded-xl border border-outline-variant/10 text-sm font-bold text-[#1a1410] focus:border-primary/40 focus:bg-white transition-all outline-none"
                             />
                         </div>
-                        <div className="space-y-4 group">
-                            <BiLabel en="URL Slug" ar="معرف الرابط" sub />
+                        <div className="space-y-2">
+                            <SimpleLabel label="URL Slug" hint="Unique link for this category" />
                             <input
                                 required
                                 name="slug"
                                 value={formData.slug}
                                 onChange={handleChange}
                                 placeholder="summer-collection"
-                                className="w-full bg-[#fff9fa]/50 px-6 py-4 rounded-2xl border border-[#fde2e7] text-[11px] font-black italic uppercase tracking-wider text-primary focus:ring-4 focus:ring-rose-50 focus:border-primary/20 transition-all outline-none"
+                                className="w-full bg-surface-container-low px-6 py-4 rounded-xl border border-outline-variant/10 text-sm font-bold text-primary focus:border-primary/40 focus:bg-white transition-all outline-none"
                             />
                         </div>
                     </div>
 
-                    {/* Parent & Status */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="space-y-4 group">
-                            <BiLabel en="Parent Category" ar="القسم الأب" sub />
+                    {/* Parent & Status Block */}
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <SimpleLabel label="Parent Category" hint="Optional: nest under another category" />
                             <select
                                 name="parent_id"
                                 value={formData.parent_id}
                                 onChange={handleChange}
-                                className="w-full bg-[#fff9fa]/50 px-6 py-4 rounded-2xl border border-[#fde2e7] text-[11px] font-black italic uppercase tracking-wider text-zinc-500 focus:ring-4 focus:ring-rose-50 focus:border-primary/20 transition-all outline-none appearance-none"
+                                className="w-full bg-surface-container-low px-6 py-4 rounded-xl border border-outline-variant/10 text-sm font-bold text-on-surface-variant focus:border-primary/40 focus:bg-white transition-all outline-none appearance-none"
                             >
-                                <option value="">None (Top Level)</option>
+                                <option value="">Root Category (Top Level)</option>
                                 {allCategories.filter(c => !c.parent_id && c.id !== category?.id).map(c => (
                                     <option key={c.id} value={c.id}>{c.name}</option>
                                 ))}
                             </select>
                         </div>
-                        <div className="space-y-6">
-                            <BiLabel en="Status" ar="تفعيل القسم" sub />
+                        <div className="space-y-4">
+                            <SimpleLabel label="Product Visibility" hint="Turn on to show in the storefront" />
                             <label className="flex items-center gap-4 cursor-pointer group/toggle w-fit">
                                 <div className="relative">
                                     <input
@@ -226,30 +213,23 @@ const CategoryModal = ({ isOpen, onClose, category, allCategories }) => {
                                         onChange={handleChange}
                                         className="sr-only peer"
                                     />
-                                    <div className="w-14 h-8 bg-zinc-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary transition-colors"></div>
+                                    <div className="w-12 h-7 bg-surface-container-high rounded-full peer peer-checked:bg-primary transition-colors after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:rounded-full after:h-[19px] after:w-[19px] after:transition-all peer-checked:after:translate-x-full"></div>
                                 </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] font-black uppercase italic tracking-widest text-[#351e24] group-hover/toggle:text-primary transition-colors">Visible Online</span>
-                                    <span className="text-[8px] font-bold text-zinc-300 -mt-0.5">Active Status</span>
-                                </div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface">{formData.is_active ? 'Public' : 'Hidden'}</span>
                             </label>
                         </div>
                     </div>
                 </form>
 
-                {/* Footer Actions */}
-                <div className="p-10 bg-[#fff9fa] border-t border-[#fde2e7] flex items-center justify-between gap-8 shrink-0">
-                    <button onClick={onClose} className="text-zinc-400 text-[10px] font-black uppercase tracking-widest italic hover:text-primary transition-colors hover:underline decoration-2 underline-offset-8">Cancel</button>
+                {/* Action Footer */}
+                <div className="p-8 border-t border-outline-variant/10 bg-surface-container-low flex items-center justify-end gap-6 shrink-0">
+                    <button onClick={onClose} className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant hover:text-primary transition-colors">Discard</button>
                     <button
                         disabled={mutation.isPending}
                         onClick={handleSubmit}
-                        className="bg-[#351e24] text-white px-12 py-5 rounded-[2rem] font-black text-[10px] uppercase tracking-widest italic hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all shadow-2xl shadow-[#351e24]/20 flex items-center gap-3 group"
+                        className="bg-on-surface text-white px-10 py-4 rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-3 shadow-xl shadow-on-surface/10 disabled:opacity-50"
                     >
-                        {mutation.isPending ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                            <Save className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-                        )}
+                        {mutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         {category ? 'Save Changes' : 'Create Category'}
                     </button>
                 </div>

@@ -18,11 +18,15 @@ import VerificationModal from '../components/ui/VerificationModal';
 const ProfilePage = () => {
     const { user, token, setUser } = useAuthStore();
     const [isEditing, setIsEditing] = useState(false);
-    const [showVerificationModal, setShowVerificationModal] = useState(false);
     const [formData, setFormData] = useState({
         name: user?.name || '',
         email: user?.email || '',
         phone: user?.phone || '',
+    });
+    const [passwordData, setPasswordData] = useState({
+        current_password: '',
+        password: '',
+        password_confirmation: '',
     });
 
     const { data: statsData } = useQuery({
@@ -37,16 +41,21 @@ const ProfilePage = () => {
     const updateProfileMutation = useMutation({
         mutationFn: (data) => axiosInstance.put('/profile', data),
         onSuccess: (res) => {
-            const { user: updatedUser, requires_verification } = res.data;
-            setUser(updatedUser || res.data);
+            const updatedUser = res.data.user || res.data;
+            setUser(updatedUser);
             setIsEditing(false);
-            if (requires_verification) {
-                setShowVerificationModal(true);
-            } else {
-                toast.success('Profile updated successfully.');
-            }
+            toast.success('Profile updated successfully.');
         },
         onError: (err) => toast.error(err.response?.data?.message || 'Update failed.')
+    });
+
+    const updatePasswordMutation = useMutation({
+        mutationFn: (data) => axiosInstance.put('/profile/password', data),
+        onSuccess: () => {
+            setPasswordData({ current_password: '', password: '', password_confirmation: '' });
+            toast.success('Password updated successfully.');
+        },
+        onError: (err) => toast.error(err.response?.data?.message || 'Password update failed.')
     });
 
     const avatarMutation = useMutation({
@@ -148,31 +157,39 @@ const ProfilePage = () => {
                         <div className="space-y-10">
                              <div className="grid md:grid-cols-2 gap-8">
                                  <div className="space-y-4">
-                                     <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60 ml-2">New Password</label>
+                                     <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60 ml-2">Current Password</label>
                                      <div className="relative group">
                                          <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/30 group-focus-within:text-primary transition-colors" />
                                          <input 
                                             type="password" 
                                             placeholder="••••••••"
-                                            className="w-full bg-surface-container-low border border-outline-variant/10 rounded-2xl py-4 pl-14 pr-6 text-[11px] font-bold focus:border-primary/40 focus:bg-white transition-all"
+                                            className="w-full bg-surface-container-low border border-outline-variant/10 rounded-2xl py-4 pl-14 pr-6 text-[11px] font-bold focus:border-primary/40 focus:bg-white transition-all shadow-inner"
+                                            value={passwordData.current_password}
+                                            onChange={(e) => setPasswordData({ ...passwordData, current_password: e.target.value })}
                                          />
                                      </div>
                                  </div>
                                  <div className="space-y-4">
-                                     <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60 ml-2">Confirm Password</label>
+                                     <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60 ml-2">New Password</label>
                                      <div className="relative group">
                                          <Shield className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/30 group-focus-within:text-primary transition-colors" />
                                          <input 
                                             type="password" 
                                             placeholder="••••••••"
-                                            className="w-full bg-surface-container-low border border-outline-variant/10 rounded-2xl py-4 pl-14 pr-6 text-[11px] font-bold focus:border-primary/40 focus:bg-white transition-all"
+                                            className="w-full bg-surface-container-low border border-outline-variant/10 rounded-2xl py-4 pl-14 pr-6 text-[11px] font-bold focus:border-primary/40 focus:bg-white transition-all shadow-inner"
+                                            value={passwordData.password}
+                                            onChange={(e) => setPasswordData({ ...passwordData, password: e.target.value, password_confirmation: e.target.value })}
                                          />
                                      </div>
                                  </div>
                              </div>
                              <div className="flex justify-end">
-                                <button className="px-10 py-4 border-2 border-primary text-primary text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-primary hover:text-white transition-all italic">
-                                    Update Password
+                                <button 
+                                    onClick={() => updatePasswordMutation.mutate(passwordData)}
+                                    disabled={updatePasswordMutation.isPending || !passwordData.current_password || !passwordData.password}
+                                    className="px-10 py-4 bg-on-surface text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-primary transition-all italic shadow-xl shadow-on-surface/10 disabled:opacity-20"
+                                >
+                                    {updatePasswordMutation.isPending ? 'Processing...' : 'Update Credentials'}
                                 </button>
                              </div>
                         </div>
@@ -216,12 +233,6 @@ const ProfilePage = () => {
                     </div>
                 </div>
             </div>
-
-            <VerificationModal
-                isOpen={showVerificationModal}
-                onClose={() => setShowVerificationModal(false)}
-                email={formData.email}
-            />
         </main>
     );
 };
