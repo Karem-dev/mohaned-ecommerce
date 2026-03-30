@@ -21,7 +21,7 @@ class UserResource extends JsonResource
             'phone' => $this->phone,
             'role' => $this->role,
             'is_banned' => $this->is_banned,
-            'avatar' => $this->avatar ? (str_contains($this->avatar, 'localhost:8000/storage/') ? asset(str_replace('http://localhost:8000/storage/', 'storage/', $this->avatar)) : (str_starts_with($this->avatar, 'http') ? $this->avatar : asset('storage/' . ltrim($this->avatar, '/')))) : null,
+            'avatar' => $this->avatar ? asset('storage/' . ltrim(preg_replace('/^http?:\/\/[^\/]+\/storage\//', '', $this->avatar), '/')) : null,
             'dob' => $this->dob,
             'gender' => $this->gender,
             'country' => $this->country,

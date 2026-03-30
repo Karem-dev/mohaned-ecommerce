@@ -37,7 +37,11 @@ jobs:
       # Install Backend Dependencies
       - name: Install Backend Dependencies
         working-directory: ./backend
-        run: composer install --no-dev --optimize-autoloader
+        run: |
+          composer install --no-dev --optimize-autoloader
+          php artisan config:clear
+          php artisan route:clear
+          php artisan view:clear
 
       # Generate .env file from GitHub Secrets (Robust method)
       - name: Generate .env file
