@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: '20'
 
-      # Build Frontend
+      # Build Frontend (outputs to backend/public/build/)
       - name: Build Frontend
         working-directory: ./frontend
         env:
@@ -39,37 +39,46 @@ jobs:
         working-directory: ./backend
         run: composer install --no-dev --optimize-autoloader
 
-      # Prepare for Deployment (Integrated Layout)
+      # Prepare Deployment Directory (SIMPLE - no flattening)
       - name: Prepare Deployment Directory
         run: |
           mkdir -p htdocs
-          
-          # 1. Prepare Backend structure
-          mkdir -p temp_backend
-          cp -r backend/* temp_backend/
-          rm -rf temp_backend/node_modules temp_backend/.env
-          
-          # 2. Add Built Frontend (ALREADY IN PUBLIC/BUILD DUE TO VITE CONFIG)
-          # So we just move everything into htdocs for root serving
-          cp -r temp_backend/* htdocs/
-          
-          # 3. Move public contents (including the build) to htdocs root
-          # This ensures index.php and the build/ folder are reachable directly.
-          cp -r temp_backend/public/* htdocs/
-          rm -rf htdocs/public
-          
-          # 4. Adjust index.php for same-folder vendor/bootstrap (since everything is in root)
-          sed -i "s|require __DIR__.'/../vendor/autoload.php'|require __DIR__.'/vendor/autoload.php'|g" htdocs/index.php
-          sed -i "s|require_once __DIR__.'/../bootstrap/app.php'|require_once __DIR__.'/bootstrap/app.php'|g" htdocs/index.php
-          sed -i "s|__DIR__.'/../storage/framework/maintenance.php'|__DIR__.'/storage/framework/maintenance.php'|g" htdocs/index.php
 
-          # 5. Patch manifest.json: rename any key to 'src/main.jsx' so blade @vite works
-          if [ -f "htdocs/build/.vite/manifest.json" ]; then
-            MANIFEST_KEY=$(cat htdocs/build/.vite/manifest.json | python3 -c "import sys,json; d=json.load(sys.stdin); print(list(d.keys())[0])")
+          # 1. Copy entire backend to htdocs (keeps standard Laravel structure)
+          cp -r backend/* htdocs/
+          rm -rf htdocs/node_modules htdocs/.env
+
+          # 2. Create root .htaccess that routes everything through public/
+          #    This is the standard shared hosting trick for Laravel
+          cat > htdocs/.htaccess << 'EOF'
+          <IfModule mod_rewrite.c>
+              RewriteEngine On
+
+              # Serve existing files/folders directly
+              RewriteCond %{REQUEST_FILENAME} -f [OR]
+              RewriteCond %{REQUEST_FILENAME} -d
+              RewriteRule ^ - [L]
+
+              # Route everything else through public/index.php
+              RewriteRule ^(.*)$ public/$1 [L]
+          </IfModule>
+          EOF
+
+          # 3. Patch manifest key to match blade @vite call
+          MANIFEST=""
+          if [ -f "htdocs/public/build/.vite/manifest.json" ]; then
+            MANIFEST="htdocs/public/build/.vite/manifest.json"
+          elif [ -f "htdocs/public/build/manifest.json" ]; then
+            MANIFEST="htdocs/public/build/manifest.json"
+          fi
+
+          if [ -n "$MANIFEST" ]; then
+            MANIFEST_KEY=$(python3 -c "import sys,json; d=json.load(open('$MANIFEST')); print(list(d.keys())[0])")
+            echo "Found manifest key: $MANIFEST_KEY"
             if [ "$MANIFEST_KEY" != "src/main.jsx" ]; then
-              sed -i "s|\"$MANIFEST_KEY\"|\"src/main.jsx\"|g" htdocs/build/.vite/manifest.json
+              sed -i "s|\"$MANIFEST_KEY\"|\"src/main.jsx\"|g" "$MANIFEST"
+              echo "Patched manifest key to: src/main.jsx"
             fi
-            echo "Manifest key is now: src/main.jsx"
           fi
 
       - name: Deploy via FTP

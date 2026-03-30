@@ -14,7 +14,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     @viteReactRefresh
-    @vite(['src/main.jsx'], 'build')
+    @vite(['src/main.jsx'])
 </head>
 
 <body class="antialiased font-manrope bg-[#f9f9f9] text-[#1a1c1c]">
