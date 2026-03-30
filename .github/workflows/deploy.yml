@@ -21,6 +21,8 @@ jobs:
       # Build Frontend
       - name: Build Frontend
         working-directory: ./frontend
+        env:
+          VITE_API_BASE_URL: https://rosastore.xo.je/api
         run: |
           npm install
           npm run build
@@ -40,20 +42,26 @@ jobs:
       # Prepare for Deployment (Integrated Layout)
       - name: Prepare Deployment Directory
         run: |
-          mkdir -p deploy
-          # 1. Copy Laravel core files (excluding node_modules and public)
-          cp -r backend/* deploy/
-          rm -rf deploy/public deploy/node_modules deploy/.env
-          
-          # 2. Create htdocs content (everything from public)
           mkdir -p htdocs
-          cp -r backend/public/* htdocs/
           
-          # 3. Adjust index.php to point to correct relative folder (if htdocs and laravel are siblings)
-          # OR if EVERYTHING is inside htdocs (InfinityFree standard)
-          # We'll put everything inside htdocs for simplicity on shared hosting
-          mv deploy/* htdocs/
-          # No need to adjust paths if both are in htdocs, but we need to point index.php to the same folder
+          # 1. Prepare Backend structure
+          mkdir -p temp_backend
+          cp -r backend/* temp_backend/
+          rm -rf temp_backend/node_modules temp_backend/.env
+          
+          # 2. Add Built Frontend to Backend Public
+          mkdir -p temp_backend/public/build
+          cp -r frontend/dist/* temp_backend/public/build/
+          
+          # 3. Move EVERYTHING into htdocs for root serving
+          # (Shared hosting standard where htdocs is the root)
+          cp -r temp_backend/* htdocs/
+          
+          # 4. Move public contents to htdocs root
+          cp -r temp_backend/public/* htdocs/
+          rm -rf htdocs/public
+          
+          # 5. Adjust index.php for same-folder vendor/bootstrap (since everything is in root)
           sed -i "s|require __DIR__.'/../vendor/autoload.php'|require __DIR__.'/vendor/autoload.php'|g" htdocs/index.php
           sed -i "s|require_once __DIR__.'/../bootstrap/app.php'|require_once __DIR__.'/bootstrap/app.php'|g" htdocs/index.php
           sed -i "s|__DIR__.'/../storage/framework/maintenance.php'|__DIR__.'/storage/framework/maintenance.php'|g" htdocs/index.php
