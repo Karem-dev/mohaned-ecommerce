@@ -14,11 +14,10 @@ class AppServiceProvider extends ServiceProvider
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        //
+        if (config('app.env') === 'production' || config('app.url') !== 'http://localhost') {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
     }
 }

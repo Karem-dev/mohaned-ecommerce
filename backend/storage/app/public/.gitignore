@@ -1,2 +1,8 @@
 *
 !.gitignore
+!avatars/
+!categories/
+!products/
+!avatars/*
+!categories/*
+!products/*
