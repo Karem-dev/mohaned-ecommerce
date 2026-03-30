@@ -216,7 +216,10 @@ const AdminUsers = () => {
                                                         : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} 
                                                     className="w-full h-full object-cover grayscale group-hover/row:grayscale-0 transition-all duration-700" 
                                                     alt={user.name} 
-                                                    onError={(e) => { e.target.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`; }}
+                                                    onError={(e) => { 
+                                                        console.error('Admin Panel Avatar failed to load:', user.avatar);
+                                                        e.target.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`; 
+                                                    }}
                                                 />
                                             </div>
                                             <div>

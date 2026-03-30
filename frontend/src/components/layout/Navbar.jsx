@@ -111,6 +111,10 @@ const Navbar = () => {
                                             src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`}
                                             className="w-full h-full object-cover"
                                             alt={user.name}
+                                            onError={(e) => {
+                                                console.error('Avatar failed to load:', user.avatar);
+                                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&color=fff`;
+                                            }}
                                         />
                                     </div>
                                     <div className="flex flex-col text-left">
@@ -179,6 +183,10 @@ const Navbar = () => {
                                                  src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`}
                                                  className="w-full h-full object-cover"
                                                  alt={user.name}
+                                                 onError={(e) => {
+                                                     console.error('Mobile Avatar failed to load:', user.avatar);
+                                                     e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&color=fff`;
+                                                 }}
                                              />
                                          </div>
                                          <div className="flex-1 min-w-0">

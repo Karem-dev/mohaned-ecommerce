@@ -188,6 +188,10 @@ const ProfilePage = () => {
                                     src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`}
                                     className="w-full h-full object-cover rounded-[3.2rem]"
                                     alt={user?.name}
+                                    onError={(e) => {
+                                        console.error('Profile Page Avatar failed to load:', user?.avatar);
+                                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name)}&background=random&color=fff`;
+                                    }}
                                 />
                             </div>
                             <label className="absolute bottom-2 right-2 w-12 h-12 bg-white shadow-2xl rounded-2xl flex items-center justify-center text-primary cursor-pointer hover:rotate-12 hover:scale-110 active:scale-95 transition-all border border-outline-variant/10">
