@@ -1,7 +1,8 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteBase /
 
-    # Redirect /storage to the actual storage folder for shared hosting
+    # Check if the file is in storage - bridge for shared hosting
     RewriteRule ^storage/(.*)$ storage/app/public/$1 [L]
 
     # If the file exists in public/, serve it directly
